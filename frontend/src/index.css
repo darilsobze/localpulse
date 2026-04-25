@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Fraunces:opsz,wght@9..144,300;9..144,500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Geist', ui-sans-serif, system-ui;
+  color-scheme: light;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: #f7d49a;
+  color: #2a1a0f;
+}
+
+/* Ambient sky — hot Sunday Darmstadt */
+.sky-hot-noon {
+  background:
+    radial-gradient(ellipse at 75% 18%, rgba(255, 234, 168, 0.95) 0%, rgba(255, 195, 120, 0.6) 25%, transparent 55%),
+    radial-gradient(ellipse at 20% 80%, rgba(255, 162, 134, 0.55) 0%, transparent 50%),
+    linear-gradient(180deg, #ffd089 0%, #ffb87a 35%, #ff9b78 70%, #d97a8c 100%);
+  background-size: 100% 100%;
+}
+
+.sky-shimmer {
+  background-size: 200% 200%;
+}
+
+.glass {
+  background: rgba(255, 248, 230, 0.55);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    0 30px 60px -20px rgba(120, 50, 30, 0.25);
+}
+
+.glass-soft {
+  background: rgba(255, 252, 240, 0.4);
+  backdrop-filter: blur(18px) saturate(130%);
+  -webkit-backdrop-filter: blur(18px) saturate(130%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.heat-haze {
+  background: radial-gradient(circle at 50% 30%, rgba(255, 220, 180, 0.4), transparent 60%);
+  filter: blur(40px);
+}
+
+.serif { font-family: 'Fraunces', ui-serif, serif; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+button { font-family: inherit; }
+
+/* Subtle film grain */
+.grain::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.6'/></svg>");
+}
