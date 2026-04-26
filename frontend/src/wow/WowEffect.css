@@ -1,0 +1,43 @@
+/* LocalPulse – WowEffect marker styles
+   Import this alongside mapbox-gl/dist/mapbox-gl.css in your app. */
+
+/* ── "You are here" marker ─────────────────────────────────────────────────── */
+.lp-user-marker {
+  width: 20px;
+  height: 20px;
+  background-color: #4dabf7;
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  animation: lp-user-pulse 2s infinite;
+}
+
+@keyframes lp-user-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(77, 171, 247, 0.5); }
+  70%  { box-shadow: 0 0 0 16px rgba(77, 171, 247, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(77, 171, 247, 0); }
+}
+
+/* ── Social proof pulse markers ─────────────────────────────────────────────── */
+.lp-pulse-marker {
+  width: 15px;
+  height: 15px;
+  background-color: #00ffcc;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #00ffcc;
+  animation: lp-pulse 1.5s infinite;
+}
+
+@keyframes lp-pulse {
+  0%   { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 204, 0.7); }
+  70%  { transform: scale(1);    box-shadow: 0 0 0 20px rgba(0, 255, 204, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 204, 0); }
+}
+
+/* ── Target merchant marker ──────────────────────────────────────────────────── */
+.lp-target-marker {
+  width: 30px;
+  height: 30px;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ff8a00"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>');
+  background-size: cover;
+}

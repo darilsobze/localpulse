@@ -1,0 +1,62 @@
+[
+  {
+    "id": "m_1",
+    "name": "BACK FACTORY",
+    "address": "Luisenpl. 4, 64283 Darmstadt",
+    "location": [8.650439, 49.872310],
+    "category": "cafe",
+    "goal": "fill_quiet_times",
+    "limits": { "max_discount_pct": 20, "max_radius_m": 800 },
+    "_demo_force_quiet": true
+  },
+  {
+    "id": "m_2",
+    "name": "Café Metropol",
+    "address": "Marktplatz 8, 64283 Darmstadt",
+    "location": [8.6530, 49.8715],
+    "category": "cafe",
+    "goal": "fill_quiet_times",
+    "limits": { "max_discount_pct": 20, "max_radius_m": 600 },
+    "_demo_force_quiet": false
+  },
+  {
+    "id": "m_3",
+    "name": "Bistro Zentrum",
+    "address": "Rheinstraße 12, 64283 Darmstadt",
+    "location": [8.6610, 49.8700],
+    "category": "restaurant",
+    "goal": "fill_quiet_times",
+    "limits": { "max_discount_pct": 15, "max_radius_m": 700 },
+    "_demo_force_quiet": false
+  },
+  {
+    "id": "m_4",
+    "name": "Bäckerei Köhler",
+    "address": "Wilhelminenstraße 3, 64283 Darmstadt",
+    "location": [8.6488, 49.8752],
+    "category": "bakery",
+    "goal": "increase_revenue",
+    "limits": { "max_discount_pct": 30, "max_radius_m": 500 },
+    "_demo_force_quiet": false
+  },
+  {
+    "id": "m_5",
+    "name": "Smoothie Lab",
+    "address": "Mathildenplatz 2, 64283 Darmstadt",
+    "location": [8.6578, 49.8692],
+    "category": "cafe",
+    "goal": "fill_quiet_times",
+    "limits": { "max_discount_pct": 20, "max_radius_m": 900 },
+    "_demo_force_quiet": false
+  },
+  {
+    "id": "m_6",
+    "name": "Taproom Darmstadt",
+    "address": "Landgraf-Georg-Straße 5, 64283 Darmstadt",
+    "location": [8.6620, 49.8660],
+    "category": "bar",
+    "goal": "fill_quiet_times",
+    "limits": { "max_discount_pct": 15, "max_radius_m": 1000 },
+    "_demo_force_quiet": false
+  }
+]

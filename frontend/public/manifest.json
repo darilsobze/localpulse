@@ -1,0 +1,54 @@
+{
+  "name": "Local Pulse",
+  "short_name": "LocalPulse",
+  "description": "AI-powered city wallet for real-time, personalized local offers",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#faf6f0",
+  "theme_color": "#1a1410",
+  "categories": ["shopping", "lifestyle"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "48x46",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Home",
+      "short_name": "Home",
+      "description": "See the current moment offer",
+      "url": "/?tab=home",
+      "icons": [
+        {
+          "src": "/favicon.svg",
+          "sizes": "48x46",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Discover",
+      "short_name": "Discover",
+      "description": "Browse nearby offers on the map",
+      "url": "/?tab=discover",
+      "icons": [
+        {
+          "src": "/favicon.svg",
+          "sizes": "48x46",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ]
+}

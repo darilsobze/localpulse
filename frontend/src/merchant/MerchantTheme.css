@@ -1,0 +1,259 @@
+/* Merchant POV — distinct visual identity vs consumer app.
+   Scoped under .merchant-root so styles never leak into the consumer surface. */
+
+.merchant-root {
+  --m-bg:           #050913;
+  --m-bg-elev:      #0d1424;
+  --m-bg-card:      #131c30;
+  --m-line:         rgba(255, 255, 255, 0.07);
+  --m-line-strong:  rgba(255, 255, 255, 0.14);
+  --m-text:         #e9eef9;
+  --m-text-dim:     rgba(233, 238, 249, 0.66);
+  --m-text-mute:    rgba(233, 238, 249, 0.42);
+  --m-accent:       #c5f54a;       /* lime-400-ish */
+  --m-accent-glow:  rgba(197, 245, 74, 0.35);
+  --m-warn:         #fbbf24;
+  --m-danger:       #fb7185;
+  --m-good:         #34d399;
+
+  background: var(--m-bg);
+  color: var(--m-text);
+  font-family: 'Geist', ui-sans-serif, system-ui;
+  font-feature-settings: 'tnum' 1, 'cv11' 1;
+  letter-spacing: -0.005em;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.merchant-root *,
+.merchant-root *::before,
+.merchant-root *::after {
+  box-sizing: border-box;
+}
+
+.merchant-root .num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+.merchant-root .m-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0)) , var(--m-bg-card);
+  border: 1px solid var(--m-line);
+  border-radius: 18px;
+}
+
+.merchant-root .m-card-elev {
+  background: var(--m-bg-elev);
+  border: 1px solid var(--m-line);
+  border-radius: 18px;
+}
+
+.merchant-root .m-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  background: rgba(197, 245, 74, 0.12);
+  color: var(--m-accent);
+  border: 1px solid rgba(197, 245, 74, 0.22);
+}
+
+.merchant-root .m-pill.idle {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--m-text-dim);
+  border-color: var(--m-line);
+}
+
+.merchant-root .m-pill.warn {
+  background: rgba(251, 191, 36, 0.12);
+  color: var(--m-warn);
+  border-color: rgba(251, 191, 36, 0.28);
+}
+
+.merchant-root .m-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 0 0 currentColor;
+  animation: mDotPulse 1.8s ease-out infinite;
+}
+
+@keyframes mDotPulse {
+  0%   { box-shadow: 0 0 0 0 currentColor; opacity: 0.8; }
+  70%  { box-shadow: 0 0 0 7px rgba(255,255,255,0); opacity: 1; }
+  100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); opacity: 0.8; }
+}
+
+.merchant-root .m-grid-bg {
+  background-image:
+    radial-gradient(circle at 18% -10%, rgba(197, 245, 74, 0.10), transparent 45%),
+    radial-gradient(circle at 90% 110%, rgba(96, 165, 250, 0.10), transparent 45%);
+}
+
+.merchant-root .m-divider {
+  height: 1px;
+  background: var(--m-line);
+}
+
+.merchant-root .m-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--m-bg-elev);
+  color: var(--m-text);
+  border: 1px solid var(--m-line-strong);
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.merchant-root .m-button:hover {
+  background: #18223c;
+}
+
+.merchant-root .m-button:active {
+  transform: scale(0.98);
+}
+
+.merchant-root .m-button.primary {
+  background: var(--m-accent);
+  color: #0b1320;
+  border-color: var(--m-accent);
+  box-shadow: 0 8px 24px -10px var(--m-accent-glow);
+}
+
+.merchant-root .m-button.primary:hover {
+  background: #b6e840;
+}
+
+.merchant-root .m-button.ghost {
+  background: transparent;
+  border-color: var(--m-line);
+}
+
+.merchant-root .m-input,
+.merchant-root .m-select {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: var(--m-bg-elev);
+  border: 1px solid var(--m-line-strong);
+  color: var(--m-text);
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.merchant-root .m-input:focus,
+.merchant-root .m-select:focus {
+  outline: none;
+  border-color: var(--m-accent);
+  box-shadow: 0 0 0 3px rgba(197, 245, 74, 0.15);
+}
+
+.merchant-root input[type='range'].m-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 24px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.merchant-root input[type='range'].m-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.merchant-root input[type='range'].m-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 18px;
+  width: 18px;
+  border-radius: 999px;
+  background: var(--m-accent);
+  border: 3px solid #0b1320;
+  box-shadow: 0 0 0 1px var(--m-accent), 0 0 12px var(--m-accent-glow);
+  margin-top: -7px;
+}
+
+.merchant-root input[type='range'].m-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.merchant-root input[type='range'].m-slider::-moz-range-thumb {
+  height: 18px;
+  width: 18px;
+  border-radius: 999px;
+  background: var(--m-accent);
+  border: 3px solid #0b1320;
+}
+
+.merchant-root .m-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--m-line);
+  color: var(--m-text-dim);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.merchant-root .m-chip.active {
+  background: var(--m-accent);
+  border-color: var(--m-accent);
+  color: #0b1320;
+}
+
+.merchant-root .m-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.merchant-root .m-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(197, 245, 74, 0.08) 50%,
+    transparent 70%
+  );
+  animation: mShimmer 3.6s linear infinite;
+}
+
+@keyframes mShimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.merchant-root .m-scroll {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.merchant-root .m-scroll::-webkit-scrollbar { display: none; }
+.merchant-root .m-scroll { scrollbar-width: none; }
