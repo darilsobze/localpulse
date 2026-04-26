@@ -70,6 +70,48 @@
     }
 
     /* ── Bottom navigation ──────────────────────────────────────────────────── */
+    /* ── Fake push notification ─────────────────────────────────────────── */
+    #fake-notif {
+      position: fixed;
+      top: calc(16px + env(safe-area-inset-top, 0px));
+      left: 50%; transform: translate(-50%, calc(-100% - 20px));
+      width: 92%; max-width: 390px;
+      z-index: 300;
+      border-radius: 20px;
+      padding: 12px 14px;
+      background: rgba(28,28,32,.97);
+      backdrop-filter: blur(32px);
+      -webkit-backdrop-filter: blur(32px);
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: 0 12px 40px rgba(0,0,0,.7);
+      display: flex; align-items: center; gap: 12px;
+      cursor: pointer;
+      transition: transform .55s cubic-bezier(.34,1.2,.64,1), opacity .3s;
+      user-select: none;
+    }
+    #fake-notif.show { transform: translateX(-50%); }
+    #fake-notif.hide { opacity: 0; pointer-events: none; transition: opacity .25s; }
+
+    .notif-icon {
+      width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+      background: linear-gradient(135deg, #ff8a00, #e52e71);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+    .notif-body { flex: 1; min-width: 0; }
+    .notif-meta {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 2px;
+    }
+    .notif-app  { font-size: 11px; font-weight: 700; letter-spacing: .3px; color: var(--muted); text-transform: uppercase; }
+    .notif-time { font-size: 11px; color: var(--muted); }
+    .notif-title { font-size: 14px; font-weight: 700; line-height: 1.3; margin-bottom: 1px; }
+    .notif-msg  { font-size: 12px; color: var(--muted); line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .notif-close {
+      background: none; border: none; color: var(--muted); font-size: 18px;
+      cursor: pointer; padding: 4px; flex-shrink: 0; line-height: 1;
+    }
+
     #bottom-nav {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
       height: calc(var(--nav) + var(--safe));
@@ -182,6 +224,9 @@
       bottom: calc(var(--nav) + 12px); left: 50%;
       transform: translate(-50%, calc(100% + 60px));
       width: 92%; max-width: 400px;
+      max-height: calc(100dvh - var(--nav) - 28px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       padding: 22px;
       z-index: 20;
       box-shadow: 0 -4px 40px rgba(0,0,0,.5);
@@ -219,8 +264,62 @@
     .pill-demand  { background:rgba(16,185,129,.14); color:#6ee7b7; border:1px solid rgba(16,185,129,.2); }
     .pill-time    { background:rgba(245,158,11,.14);  color:#fcd34d; border:1px solid rgba(245,158,11,.2); }
     .pill-event   { background:rgba(167,139,250,.14); color:#c4b5fd; border:1px solid rgba(167,139,250,.2); }
+    .pill-vibe    { background:rgba(255,138,0,.12);   color:#fdba74; border:1px solid rgba(255,138,0,.25); }
 
     .gdpr-note { font-size:10px; color:#4a4a5a; text-align:center; margin-top:10px; line-height:1.4; }
+
+    /* ── Alternatives ("Weitere Ideen") ─────────────────────────────────── */
+    #offer-alternatives {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height .45s ease, opacity .35s ease, padding-top .45s ease, margin-top .45s ease;
+    }
+    #offer-alternatives.visible {
+      max-height: 300px;
+      opacity: 1;
+      padding-top: 14px;
+      margin-top: 16px;
+    }
+
+    .alt-header {
+      font-size: 11px; font-weight: 700; letter-spacing: .6px;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .alt-card {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 14px;
+      padding: 10px 14px;
+      display: flex; align-items: flex-start; gap: 10px;
+      animation: altIn .3s ease both;
+    }
+    .alt-card:nth-child(2) { animation-delay: .08s; }
+    @keyframes altIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .alt-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--orange); opacity: .7;
+      flex-shrink: 0; margin-top: 5px;
+    }
+    .alt-body { flex: 1; }
+    .alt-title { font-size: 13px; font-weight: 700; line-height: 1.3; margin-bottom: 2px; }
+    .alt-desc  { font-size: 12px; color: var(--muted); line-height: 1.4; }
+    .alt-reason {
+      display: inline-block; margin-top: 4px;
+      font-size: 10px; font-weight: 600;
+      background: rgba(255,138,0,.1); color: var(--orange);
+      border-radius: 8px; padding: 2px 8px;
+    }
 
     /* ══════════════════════════════════════════════════════════════════════════
        HOME — ROUTE BANNER + ACTION
@@ -486,6 +585,20 @@
   <!-- Always-on map -->
   <div id="map"></div>
 
+  <!-- ── FAKE PUSH NOTIFICATION ────────────────────────────────────────── -->
+  <div id="fake-notif" onclick="notifAccept()" role="button" aria-label="Benachrichtigung öffnen">
+    <div class="notif-icon">🏋️</div>
+    <div class="notif-body">
+      <div class="notif-meta">
+        <span class="notif-app">LocalPulse</span>
+        <span class="notif-time" id="notif-time">Jetzt</span>
+      </div>
+      <div class="notif-title">Workout geschafft! 💪</div>
+      <div class="notif-msg">Danny's Eisdiele · 80m entfernt · 25% Cashback – du hast es dir verdient!</div>
+    </div>
+    <button class="notif-close" onclick="notifDismiss(event)" aria-label="Schließen">×</button>
+  </div>
+
   <!-- ── CONTEXT SENSING CARD ────────────────────────────────────────────── -->
   <div id="ctx-card" class="glass">
     <div class="ctx-header">
@@ -511,6 +624,12 @@
     <button class="btn btn-primary" id="btn-accept">Nehm ich! &nbsp;→</button>
     <button class="btn btn-secondary" id="btn-dismiss" style="margin-top:10px">Vielleicht später</button>
     <p class="gdpr-note" id="gdpr-note">🔒 Dein GPS bleibt auf deinem Gerät.</p>
+
+    <!-- Alternatives -->
+    <div id="offer-alternatives">
+      <div class="alt-header">💡 Weitere Ideen für dich</div>
+      <div id="alt-list"></div>
+    </div>
   </div>
 
   <!-- ── ROUTE BANNER (top) ─────────────────────────────────────────────── -->
@@ -702,10 +821,236 @@
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // ContextEngine — on-device behavioral tracking (DSGVO-konform)
+    //
+    // All raw GPS data stays in browser RAM and never leaves the device.
+    // Only abstract IntentSignal fields (vibe_state, pace_class, receptivity,
+    // offer_format, activity_context) are transmitted to the server.
+    // ─────────────────────────────────────────────────────────────────────────
+    class ContextEngine {
+      constructor() {
+        // 20s snapshots, ring buffer max 1080 entries = 6 hours
+        this.ringBuffer    = [];
+        this.RING_MAX      = 1080;
+        this.SNAP_MS       = 20_000;
+        this.DETAIL_MS     = 30 * 60 * 1000;  // 30min detail window
+
+        this.currentPos    = null;
+        this._watchId      = null;
+        this._snapTimer    = null;
+
+        // Derived vibe state (updated every snapshot)
+        this.vibeState     = 'unknown';
+        this.paceClass     = 'unknown';
+        this.paceMps       = null;
+        this.receptivity   = 0.5;
+        this.offerFormat   = 'full_experience';
+        this.activityCtx   = 'unknown';
+
+        this._start();
+      }
+
+      _start() {
+        if (!navigator.geolocation) return;
+        this._watchId = navigator.geolocation.watchPosition(
+          pos => { this.currentPos = [pos.coords.longitude, pos.coords.latitude]; },
+          err  => console.warn('[CE] GPS:', err.message),
+          { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+        );
+        // Take first snapshot after 2s (give GPS time to resolve), then every 20s
+        setTimeout(() => this._snap(), 2000);
+        this._snapTimer = setInterval(() => this._snap(), this.SNAP_MS);
+      }
+
+      _snap() {
+        if (!this.currentPos) return;
+        const entry = { p: [...this.currentPos], t: Date.now() };
+        this.ringBuffer.push(entry);
+        if (this.ringBuffer.length > this.RING_MAX) this.ringBuffer.shift();
+        this._updateVibe();
+      }
+
+      // Return snaps within the last windowMs milliseconds
+      _recent(windowMs) {
+        const cutoff = Date.now() - windowMs;
+        return this.ringBuffer.filter(s => s.t > cutoff);
+      }
+
+      _haversine([lng1, lat1], [lng2, lat2]) {
+        const R = 6_371_000, rad = Math.PI / 180;
+        const dLat = (lat2 - lat1) * rad, dLng = (lng2 - lng1) * rad;
+        const a = Math.sin(dLat/2)**2
+          + Math.cos(lat1*rad) * Math.cos(lat2*rad) * Math.sin(dLng/2)**2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      }
+
+      _bearing([lng1, lat1], [lng2, lat2]) {
+        const rad = Math.PI / 180;
+        const dLng = (lng2 - lng1) * rad;
+        const φ1 = lat1*rad, φ2 = lat2*rad;
+        const y = Math.sin(dLng) * Math.cos(φ2);
+        const x = Math.cos(φ1)*Math.sin(φ2) - Math.sin(φ1)*Math.cos(φ2)*Math.cos(dLng);
+        return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+      }
+
+      // Compute current pace in m/s from the last 60 seconds of movement
+      _computePace() {
+        const snaps = this._recent(60_000);
+        if (snaps.length < 2) return null;
+        const first = snaps[0], last = snaps[snaps.length - 1];
+        const dist = this._haversine(first.p, last.p);
+        const dt   = (last.t - first.t) / 1000;
+        return dt > 0 ? dist / dt : 0;
+      }
+
+      // High direction variance = wandering / exploring
+      _bearingVariance(snaps) {
+        if (snaps.length < 3) return 0;
+        const segs = [];
+        for (let i = 1; i < snaps.length; i++) {
+          if (this._haversine(snaps[i-1].p, snaps[i].p) > 2) // ignore GPS noise < 2m
+            segs.push(this._bearing(snaps[i-1].p, snaps[i].p));
+        }
+        if (segs.length < 2) return 0;
+        const mean = segs.reduce((a,b) => a+b, 0) / segs.length;
+        const mse  = segs.reduce((s, b) => {
+          const d = Math.abs(b - mean); return s + Math.min(d, 360-d)**2;
+        }, 0) / segs.length;
+        return Math.sqrt(mse);
+      }
+
+      // Dwelling: <30m total movement over the last 90 seconds
+      _isDwelling() {
+        const snaps = this._recent(90_000);
+        if (snaps.length < 3) return false;
+        const totalDist = snaps.reduce((s, snap, i) =>
+          i === 0 ? 0 : s + this._haversine(snaps[i-1].p, snap.p), 0);
+        return totalDist < 30;
+      }
+
+      // Post-errand: was fast (>1.2 m/s) 3–8 min ago, now slowing
+      _isPostErrand() {
+        const before = this._recent(8 * 60_000).filter(s => s.t < Date.now() - 3 * 60_000);
+        if (before.length < 3) return false;
+        const first = before[0], last = before[before.length - 1];
+        const dist = this._haversine(first.p, last.p);
+        const dt   = (last.t - first.t) / 1000;
+        const pastPace = dt > 0 ? dist / dt : 0;
+        return pastPace > 1.2 && (this.paceMps ?? 0) < 0.9;
+      }
+
+      _updateVibe() {
+        const pace   = this._computePace();
+        this.paceMps = pace;
+
+        // Pace class
+        if      (pace === null) this.paceClass = 'unknown';
+        else if (pace < 0.3)   this.paceClass = 'stopped';
+        else if (pace < 0.8)   this.paceClass = 'strolling';
+        else if (pace < 1.5)   this.paceClass = 'walking';
+        else                   this.paceClass = 'fast';
+
+        const dwelling     = this._isDwelling();
+        const recent5      = this._recent(120_000);
+        const wandering    = this._bearingVariance(recent5) > 55;
+        const postErrand   = this._isPostErrand();
+
+        // Vibe state machine
+        if (dwelling || this.paceClass === 'stopped') {
+          this.vibeState  = 'lingering';
+          this.activityCtx = 'leisure';
+        } else if (postErrand) {
+          this.vibeState  = 'post_errand';
+          this.activityCtx = 'post_errand';
+        } else if (this.paceClass === 'fast') {
+          this.vibeState  = 'commuting';
+          this.activityCtx = 'commuting';
+        } else if (wandering) {
+          this.vibeState  = 'exploring';
+          this.activityCtx = 'leisure';
+        } else {
+          this.vibeState  = 'strolling';
+          this.activityCtx = 'leisure';
+        }
+
+        // Receptivity: how open is this person to stopping right now
+        const receptivityMap = {
+          lingering:   0.93,
+          post_errand: 0.80,
+          exploring:   0.75,
+          strolling:   0.58,
+          commuting:   0.22,
+          unknown:     0.50,
+        };
+        this.receptivity = receptivityMap[this.vibeState] ?? 0.5;
+
+        // Offer format: fast = quick grab, else full experience
+        this.offerFormat = (this.paceClass === 'fast') ? 'quick_grab' : 'full_experience';
+      }
+
+      // Human-readable vibe label for the UI
+      vibeLabel() {
+        const labels = {
+          lingering:   '🧍 Schlendernd / Verweilend',
+          exploring:   '🗺️ Auf Entdeckungstour',
+          strolling:   '🚶 Entspannter Spaziergang',
+          commuting:   '⚡ Unterwegs / Zielgerichtet',
+          post_errand: '✅ Erledigungen fertig',
+          unknown:     '📡 Wird erfasst…',
+        };
+        return labels[this.vibeState] ?? '📡 Wird erfasst…';
+      }
+
+      // Pre-seed ring buffer with a gym-exit movement pattern.
+      // Simulates: fast walk out of gym (triggers post_errand detection),
+      // then slowing to a stroll 100m later (high receptivity).
+      seedGymSession(gymLngLat) {
+        const now = Date.now();
+        const [lng, lat] = gymLngLat;
+        // Synthetic snapshots: 10 min ago fast exit, last 2 min slowing down
+        const synthetic = [
+          // 10–3 min ago: fast walk away from gym (1.6 m/s ≈ 3.2m per 2s)
+          { p: [lng - 0.0012, lat - 0.0004], t: now - 10 * 60_000 },
+          { p: [lng - 0.0009, lat - 0.0003], t: now -  9 * 60_000 },
+          { p: [lng - 0.0007, lat - 0.0002], t: now -  8 * 60_000 },
+          { p: [lng - 0.0005, lat - 0.0001], t: now -  7 * 60_000 },
+          { p: [lng - 0.0003, lat          ], t: now -  6 * 60_000 },
+          { p: [lng - 0.0001, lat + 0.0001], t: now -  5 * 60_000 },
+          // 3–1 min ago: pace drops — slowing down after errand
+          { p: [lng + 0.0001, lat + 0.0001], t: now -  3 * 60_000 },
+          { p: [lng + 0.0002, lat + 0.0002], t: now -  2 * 60_000 },
+          // Last 40s: nearly stopped / slow stroll
+          { p: [lng + 0.0003, lat + 0.0002], t: now -    40_000 },
+          { p: [lng + 0.0003, lat + 0.0002], t: now -    20_000 },
+        ];
+        synthetic.forEach(s => this.ringBuffer.push(s));
+        this.currentPos = [...gymLngLat];
+        this._updateVibe();
+      }
+
+      // The ONLY data that leaves this device — no raw GPS, no history
+      getIntentSignal() {
+        return {
+          vibe_state:       this.vibeState,
+          pace_class:       this.paceClass,
+          receptivity:      Math.round(this.receptivity * 100) / 100,
+          offer_format:     this.offerFormat,
+          activity_context: this.activityCtx,
+        };
+      }
+
+      stop() {
+        if (this._watchId !== null) navigator.geolocation.clearWatch(this._watchId);
+        if (this._snapTimer !== null) clearInterval(this._snapTimer);
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // Constants & state
     // ─────────────────────────────────────────────────────────────────────────
     const TOKEN      = (typeof CONFIG !== 'undefined' && CONFIG.MAPBOX_TOKEN) || '';
-    const FALLBACK   = [8.6512, 49.8728];
+    const GYM_LNGLAT = [8.6512, 49.8728];   // A.I. Fitness Club, Luisenplatz 5
+    const FALLBACK   = GYM_LNGLAT;
     const USER_ID    = 'user_demo';
     const DEMO_MID   = 'm_1';
 
@@ -718,6 +1063,10 @@
     let offerCode    = null;
     let countdown    = null;  // interval id
     let cdSecs       = 900;
+
+    // Start tracking + pre-seed with gym-exit movement history
+    const ctxEngine = new ContextEngine();
+    ctxEngine.seedGymSession(GYM_LNGLAT);
 
     // ─────────────────────────────────────────────────────────────────────────
     // Helpers
@@ -770,6 +1119,7 @@
       { id:'row-time',     ico:'🕐', lbl:'Uhrzeit' },
       { id:'row-location', ico:'📍', lbl:'Standort' },
       { id:'row-weather',  ico:'🌤️', lbl:'Wetter' },
+      { id:'row-movement', ico:'🧠', lbl:'Deine Vibe' },
       { id:'row-demand',   ico:'🏪', lbl:'Payone-Signal' },
     ];
 
@@ -810,7 +1160,7 @@
     async function checkLocation() {
       return new Promise(resolve => {
         if (!navigator.geolocation) {
-          resolveRow('row-location', 'Darmstadt (Demo)');
+          resolveRow('row-location', 'A.I. Fitness Club, Luisenplatz 5');
           return resolve(FALLBACK);
         }
         navigator.geolocation.getCurrentPosition(
@@ -823,7 +1173,7 @@
             } catch { resolveRow('row-location', 'Gefunden'); }
             resolve(ll);
           },
-          () => { resolveRow('row-location', 'Darmstadt (Demo)'); resolve(FALLBACK); },
+          () => { resolveRow('row-location', 'A.I. Fitness Club, Luisenplatz 5'); resolve(FALLBACK); },
           { enableHighAccuracy: true, timeout: 8000 }
         );
       });
@@ -839,7 +1189,11 @@
     }
 
     async function fetchOffer(ll) {
+      // Resolve the movement row before the network call so it shows during loading
+      resolveRow('row-movement', ctxEngine.vibeLabel());
+
       try {
+        const intentSignal = ctxEngine.getIntentSignal();
         const res = await fetch('/api/offer', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -847,6 +1201,7 @@
             user_lng: ll[0], user_lat: ll[1],
             temperature: weatherTemp, weather_code: weatherCode,
             radius_m: 50000,
+            ...intentSignal,        // vibe_state, pace_class, receptivity, offer_format, activity_context
           }),
         });
         if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -901,6 +1256,8 @@
 
         cdSecs = offer.expires_in_sec ?? 900;
         startCountdown();
+
+        renderAlternatives(offer.alternatives || []);
       } else {
         document.getElementById('offer-badge-ico').textContent = '😴';
         document.getElementById('offer-badge-lbl').textContent = 'Keine Angebote';
@@ -910,9 +1267,30 @@
         document.getElementById('offer-timer').textContent     = '';
         document.getElementById('offer-pills').innerHTML       = '';
         document.getElementById('btn-accept').disabled = true;
+        renderAlternatives([]);
       }
 
       document.getElementById('offer-card').classList.add('up');
+    }
+
+    function renderAlternatives(alts) {
+      const wrap = document.getElementById('offer-alternatives');
+      const list = document.getElementById('alt-list');
+      wrap.classList.remove('visible');
+      list.innerHTML = '';
+      if (!alts || alts.length === 0) return;
+      list.innerHTML = alts.map(a => `
+        <div class="alt-card">
+          <div class="alt-dot"></div>
+          <div class="alt-body">
+            <div class="alt-title">${a.title}</div>
+            <div class="alt-desc">${a.description}</div>
+            ${a.context_reason ? `<span class="alt-reason">${a.context_reason}</span>` : ''}
+          </div>
+        </div>
+      `).join('');
+      // slight delay so the card slide-up finishes first
+      setTimeout(() => wrap.classList.add('visible'), 600);
     }
 
     function startCountdown() {
@@ -1278,9 +1656,38 @@
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Boot
+    // Fake notification — fires after 4s to simulate the 100m post-gym walk
     // ─────────────────────────────────────────────────────────────────────────
-    runContextChecks();
+    let notifShown  = false;
+    let notifTimer  = null;
+    let autoHide    = null;
+
+    function showFakeNotif() {
+      if (notifShown) return;
+      notifShown = true;
+      // Live clock in notification
+      document.getElementById('notif-time').textContent =
+        new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr';
+      document.getElementById('fake-notif').classList.add('show');
+      // Auto-dismiss after 12s if user ignores it
+      autoHide = setTimeout(() => notifDismiss(), 12_000);
+    }
+
+    function notifAccept() {
+      clearTimeout(autoHide);
+      const n = document.getElementById('fake-notif');
+      n.classList.add('hide');
+      setTimeout(() => { n.style.display = 'none'; runContextChecks(); }, 250);
+    }
+
+    function notifDismiss(e) {
+      if (e) e.stopPropagation();
+      clearTimeout(autoHide);
+      document.getElementById('fake-notif').classList.add('hide');
+    }
+
+    // 4 seconds after page load = "the 100m walk"
+    notifTimer = setTimeout(showFakeNotif, 4000);
   </script>
 </body>
 </html>

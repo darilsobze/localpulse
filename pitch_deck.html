@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LocalPulse – Tech Pitch Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange: #ff8a00;
+    --pink:   #e52e71;
+    --grad:   linear-gradient(135deg, #ff8a00, #e52e71);
+    --bg:     #07070f;
+    --surf:   rgba(255,255,255,0.045);
+    --border: rgba(255,255,255,0.08);
+    --text:   #f0f0f8;
+    --muted:  rgba(255,255,255,0.45);
+    --mono:   'JetBrains Mono', monospace;
+    --sans:   'Inter', system-ui, sans-serif;
+  }
+
+  html { font-family: var(--sans); background: var(--bg); color: var(--text); }
+
+  /* ── PRINT SETUP ─────────────────────────────────────────────────────── */
+  @page { size: A4 landscape; margin: 0; }
+
+  @media print {
+    html, body { width: 297mm; height: 210mm; overflow: hidden; background: #07070f; }
+    .slide { page-break-after: always; break-after: page; }
+    .slide:last-child { page-break-after: avoid; break-after: avoid; }
+    .no-print { display: none !important; }
+  }
+
+  /* ── SCREEN PREVIEW ──────────────────────────────────────────────────── */
+  @media screen {
+    body { display: flex; flex-direction: column; align-items: center; gap: 24px; padding: 32px; background: #111; }
+    .nav-bar {
+      position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,.8); border: 1px solid var(--border);
+      backdrop-filter: blur(12px); border-radius: 100px;
+      padding: 10px 20px; display: flex; align-items: center; gap: 16px;
+      font-size: 12px; color: var(--muted); z-index: 999;
+    }
+    .nav-bar span { color: var(--text); font-weight: 600; }
+    .nav-bar kbd {
+      background: rgba(255,255,255,.1); border-radius: 4px;
+      padding: 2px 6px; font-family: var(--mono); font-size: 11px;
+    }
+  }
+
+  /* ── SLIDE BASE ───────────────────────────────────────────────────────── */
+  .slide {
+    width: 297mm;
+    height: 210mm;
+    position: relative;
+    overflow: hidden;
+    background: var(--bg);
+    flex-shrink: 0;
+  }
+
+  /* ── BACKGROUND LAYERS ───────────────────────────────────────────────── */
+  .slide-bg {
+    position: absolute; inset: 0; pointer-events: none;
+  }
+  .grid-lines {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.028) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.028) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .glow {
+    position: absolute; border-radius: 50%; filter: blur(80px);
+    pointer-events: none;
+  }
+  .glow-orange { background: rgba(255,138,0,.18); }
+  .glow-pink   { background: rgba(229,46,113,.14); }
+  .glow-blue   { background: rgba(59,130,246,.12); }
+
+  /* ── SLIDE HEADER ────────────────────────────────────────────────────── */
+  .slide-header {
+    position: absolute; top: 0; left: 0; right: 0;
+    padding: 22px 36px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .slide-brand {
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .brand-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--grad);
+  }
+  .timestamp-badge {
+    font-family: var(--mono); font-size: 10px;
+    background: rgba(255,138,0,.1); border: 1px solid rgba(255,138,0,.25);
+    color: var(--orange); border-radius: 100px; padding: 4px 12px;
+  }
+
+  /* ── SLIDE FOOTER ────────────────────────────────────────────────────── */
+  .slide-footer {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 0 36px 16px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+  }
+  .slide-num {
+    font-family: var(--mono); font-size: 10px; color: rgba(255,255,255,.2);
+  }
+
+  /* ── GRAD TEXT ───────────────────────────────────────────────────────── */
+  .grad { background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+  /* ── GLASS CARD ──────────────────────────────────────────────────────── */
+  .glass {
+    background: var(--surf);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    backdrop-filter: blur(12px);
+  }
+
+  /* ── TAG / BADGE ─────────────────────────────────────────────────────── */
+  .tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 100px; padding: 5px 14px;
+    font-size: 12px; font-weight: 700;
+  }
+  .tag-orange { background: rgba(255,138,0,.12); border: 1px solid rgba(255,138,0,.25); color: var(--orange); }
+  .tag-green  { background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.25); color: #34d399; }
+  .tag-blue   { background: rgba(59,130,246,.12); border: 1px solid rgba(59,130,246,.25); color: #93c5fd; }
+  .tag-pink   { background: rgba(229,46,113,.12); border: 1px solid rgba(229,46,113,.3);  color: #f472b6; }
+  .tag-muted  { background: rgba(255,255,255,.06); border: 1px solid var(--border);       color: var(--muted); }
+
+
+  /* ════════════════════════════════════════════════════════════════════════
+     SLIDE 1 — TITLE / TECH STACK
+  ════════════════════════════════════════════════════════════════════════ */
+  #s1 .main { position: absolute; top: 48px; left: 36px; right: 36px; }
+  #s1 .eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 12px; display: flex; align-items: center; gap: 10px;
+  }
+  #s1 .eyebrow::before { content:''; display:block; width:28px; height:2px; background: var(--grad); border-radius:2px; }
+  #s1 h1 { font-size: 74px; font-weight: 900; line-height: .95; letter-spacing: -3px; margin-bottom: 10px; }
+  #s1 .sub { font-size: 22px; font-weight: 300; color: var(--muted); letter-spacing: .5px; margin-bottom: 30px; }
+  #s1 .divider { width: 60px; height: 3px; background: var(--grad); border-radius: 3px; margin-bottom: 28px; }
+
+  #s1 .stack-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  #s1 .stack-card {
+    background: rgba(255,255,255,.05); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 18px;
+    display: flex; flex-direction: column; gap: 4px; min-width: 100px;
+  }
+  #s1 .stack-card .ico { font-size: 24px; }
+  #s1 .stack-card .name { font-size: 13px; font-weight: 700; }
+  #s1 .stack-card .role { font-size: 10px; color: var(--muted); }
+
+  /* right-side visual */
+  #s1 .city-visual {
+    position: absolute; right: 0; top: 0; bottom: 0; width: 46%;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+
+  /* ════════════════════════════════════════════════════════════════════════
+     SLIDE 2 — PRIVACY BY DESIGN
+  ════════════════════════════════════════════════════════════════════════ */
+  #s2 .title-area { position: absolute; top: 48px; left: 36px; right: 36px; }
+  #s2 .slide-title { font-size: 42px; font-weight: 900; letter-spacing: -1.5px; margin-bottom: 6px; }
+  #s2 .slide-sub   { font-size: 14px; color: var(--muted); }
+
+  #s2 .diagram-wrap {
+    position: absolute; top: 115px; left: 36px; right: 36px; bottom: 56px;
+    display: flex; align-items: center; gap: 20px;
+  }
+  #s2 .node {
+    flex: 1; height: 100%;
+    background: rgba(255,255,255,.04); border: 1px solid var(--border);
+    border-radius: 18px; padding: 22px; position: relative;
+    display: flex; flex-direction: column;
+  }
+  #s2 .node-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin-bottom: 16px; }
+  #s2 .node-icon  { font-size: 36px; margin-bottom: 14px; }
+  #s2 .node-name  { font-size: 20px; font-weight: 800; margin-bottom: 10px; }
+
+  #s2 .data-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border-radius: 8px; margin-bottom: 6px;
+    font-size: 11px; font-weight: 600;
+  }
+  #s2 .data-row.stays { background: rgba(16,185,129,.08); border: 1px solid rgba(16,185,129,.2); color: #34d399; }
+  #s2 .data-row.gone  { background: rgba(255,255,255,.04); border: 1px solid var(--border); color: var(--muted); text-decoration: line-through; opacity: .5; }
+
+  #s2 .arrow-col {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    flex-shrink: 0; width: 120px;
+  }
+  #s2 .arrow-label { font-size: 9px; text-align: center; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+  #s2 .signal-box {
+    background: rgba(255,138,0,.08); border: 1px solid rgba(255,138,0,.3);
+    border-radius: 10px; padding: 10px 12px; text-align: center;
+    font-family: var(--mono); font-size: 10px; color: var(--orange); line-height: 1.6;
+  }
+  #s2 .lock-badge {
+    background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.3);
+    border-radius: 10px; padding: 8px 12px; text-align: center;
+    font-size: 10px; font-weight: 700; color: #34d399; margin-top: 6px;
+  }
+
+  #s2 .node.server { border-color: rgba(255,138,0,.25); }
+  #s2 .server-stack { display: flex; flex-direction: column; gap: 6px; margin-top: auto; }
+  #s2 .ss-row { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); }
+  #s2 .ss-dot { width:6px; height:6px; border-radius:50%; background: var(--orange); flex-shrink:0; }
+
+
+  /* ════════════════════════════════════════════════════════════════════════
+     SLIDE 3 — CONTEXT LAYERING & AI
+  ════════════════════════════════════════════════════════════════════════ */
+  #s3 .title-area { position: absolute; top: 48px; left: 36px; right: 36px; }
+  #s3 .slide-title { font-size: 42px; font-weight: 900; letter-spacing: -1.5px; margin-bottom: 6px; }
+  #s3 .slide-sub   { font-size: 14px; color: var(--muted); }
+
+  #s3 .funnel-wrap {
+    position: absolute; top: 118px; left: 36px; right: 36px; bottom: 56px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  #s3 .signals-col {
+    display: flex; flex-direction: column; gap: 10px; flex: 1.1;
+  }
+  #s3 .sig-card {
+    background: rgba(255,255,255,.05); border: 1px solid var(--border);
+    border-radius: 12px; padding: 11px 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  #s3 .sig-ico  { font-size: 20px; width: 28px; text-align: center; flex-shrink: 0; }
+  #s3 .sig-name { font-size: 13px; font-weight: 700; }
+  #s3 .sig-val  { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+  #s3 .arrow-mid {
+    flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    color: var(--muted); font-size: 11px; width: 60px;
+  }
+
+  #s3 .ai-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+  #s3 .ai-box {
+    width: 100%; background: rgba(255,138,0,.07); border: 2px solid rgba(255,138,0,.35);
+    border-radius: 18px; padding: 20px; text-align: center;
+  }
+  #s3 .ai-icon  { font-size: 40px; margin-bottom: 8px; }
+  #s3 .ai-name  { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+  #s3 .ai-sub   { font-size: 10px; color: var(--muted); }
+
+  #s3 .output-col { flex: 1.2; display: flex; flex-direction: column; gap: 8px; }
+  #s3 .offer-example {
+    border-radius: 14px; padding: 12px 14px;
+    border: 1px solid;
+  }
+  #s3 .offer-example .vibe-tag { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+  #s3 .offer-example .offer-title { font-size: 13px; font-weight: 800; margin-bottom: 2px; }
+  #s3 .offer-example .offer-desc  { font-size: 10px; color: var(--muted); }
+
+  #s3 .ex-lingering { background: rgba(16,185,129,.06); border-color: rgba(16,185,129,.2); }
+  #s3 .ex-commuting { background: rgba(255,138,0,.06);  border-color: rgba(255,138,0,.2); }
+  #s3 .ex-post      { background: rgba(167,139,250,.06); border-color: rgba(167,139,250,.2); }
+  #s3 .vibe-lingering { color: #34d399; }
+  #s3 .vibe-commuting { color: var(--orange); }
+  #s3 .vibe-post      { color: #c4b5fd; }
+
+
+  /* ════════════════════════════════════════════════════════════════════════
+     SLIDE 4 — JSON / API RESPONSE
+  ════════════════════════════════════════════════════════════════════════ */
+  #s4 .title-area { position: absolute; top: 48px; left: 36px; }
+  #s4 .slide-title { font-size: 42px; font-weight: 900; letter-spacing: -1.5px; margin-bottom: 6px; }
+  #s4 .slide-sub   { font-size: 14px; color: var(--muted); }
+
+  #s4 .content {
+    position: absolute; top: 118px; left: 36px; right: 36px; bottom: 56px;
+    display: flex; gap: 24px; align-items: stretch;
+  }
+  #s4 .code-wrap {
+    flex: 1.4;
+    background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.07);
+    border-radius: 16px; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  #s4 .code-bar {
+    background: rgba(255,255,255,.05); padding: 10px 16px;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+  #s4 .dot { width:10px; height:10px; border-radius:50%; }
+  #s4 .code-label { font-size: 11px; font-family: var(--mono); color: var(--muted); margin-left: 6px; }
+  #s4 pre {
+    padding: 18px 20px; font-family: var(--mono); font-size: 11.5px;
+    line-height: 1.7; overflow: hidden; flex: 1;
+    color: #e2e8f0;
+  }
+  .kw   { color: #93c5fd; }
+  .str  { color: #86efac; }
+  .num  { color: #fcd34d; }
+  .key  { color: #f9a8d4; }
+  .cmt  { color: rgba(255,255,255,.3); font-style: italic; }
+  .hl   { background: rgba(255,138,0,.12); border-radius: 3px; padding: 1px 3px; }
+
+  #s4 .callouts { flex: 1; display: flex; flex-direction: column; gap: 12px; justify-content: center; }
+  #s4 .callout {
+    background: rgba(255,255,255,.04); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 16px;
+  }
+  #s4 .callout .c-icon { font-size: 22px; margin-bottom: 6px; }
+  #s4 .callout .c-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+  #s4 .callout .c-text  { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  #s4 .callout.highlight { border-color: rgba(255,138,0,.3); background: rgba(255,138,0,.06); }
+
+
+  /* ════════════════════════════════════════════════════════════════════════
+     SLIDE 5 — CHECKOUT & CONCLUSION
+  ════════════════════════════════════════════════════════════════════════ */
+  #s5 .title-area { position: absolute; top: 48px; left: 36px; right: 36px; }
+  #s5 .slide-title { font-size: 42px; font-weight: 900; letter-spacing: -1.5px; margin-bottom: 6px; }
+  #s5 .slide-sub   { font-size: 14px; color: var(--muted); }
+
+  #s5 .loop-wrap {
+    position: absolute; top: 118px; left: 36px; right: 36px; bottom: 80px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  #s5 .tagline {
+    position: absolute; bottom: 28px; left: 36px; right: 36px;
+    text-align: center;
+  }
+  #s5 .tagline-text {
+    font-size: 20px; font-weight: 800; letter-spacing: -.5px;
+  }
+  #s5 .tagline-dots {
+    display: flex; align-items: center; justify-content: center; gap: 20px;
+    margin-top: 8px;
+  }
+  #s5 .tag-item { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  #s5 .tag-item::before { content:''; width:4px; height:4px; border-radius:50%; background: var(--orange); flex-shrink:0; }
+</style>
+</head>
+<body>
+
+<!-- Screen-only helper bar -->
+<div class="nav-bar no-print">
+  <div class="brand-dot" style="background:linear-gradient(135deg,#ff8a00,#e52e71); width:8px;height:8px;border-radius:50%;"></div>
+  <span>LocalPulse Pitch Deck</span>
+  <span style="color:var(--muted)">·</span>
+  <span style="color:var(--muted)">To export:</span>
+  <kbd>Ctrl+P</kbd>
+  <span style="color:var(--muted)">→ Save as PDF → Landscape A4 · No margins</span>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     SLIDE 1 — TITLE / TECH STACK
+══════════════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s1">
+  <div class="slide-bg">
+    <div class="grid-lines"></div>
+    <div class="glow glow-orange" style="width:380px;height:380px;right:-60px;top:-100px;opacity:.9;"></div>
+    <div class="glow glow-pink"   style="width:300px;height:300px;left:10%;bottom:-80px;opacity:.7;"></div>
+  </div>
+
+  <div class="slide-header">
+    <div class="slide-brand"><div class="brand-dot"></div>LocalPulse · DSV-Gruppe × Hack-Nation · Challenge 01</div>
+    <div class="timestamp-badge">00:00 — 00:10</div>
+  </div>
+
+  <!-- Left content -->
+  <div class="main" style="top:52px;">
+    <div style="margin-top:22px;">
+      <div class="eyebrow">Generative City Wallet</div>
+      <h1><span class="grad">Local</span><br>Pulse</h1>
+      <div class="sub">AI-driven · Privacy-first · End-to-end</div>
+      <div class="divider"></div>
+      <div class="stack-row">
+        <div class="stack-card">
+          <div class="ico">⚡</div>
+          <div class="name">FastAPI</div>
+          <div class="role">Async Python API</div>
+        </div>
+        <div class="stack-card">
+          <div class="ico">🗺️</div>
+          <div class="name">Mapbox 3D</div>
+          <div class="role">60fps city map</div>
+        </div>
+        <div class="stack-card">
+          <div class="ico">🤖</div>
+          <div class="name">Gemma 4 2B</div>
+          <div class="role">Offer generation</div>
+        </div>
+        <div class="stack-card">
+          <div class="ico">🗄️</div>
+          <div class="name">SQLite</div>
+          <div class="role">Fast persistence</div>
+        </div>
+        <div class="stack-card">
+          <div class="ico">🔒</div>
+          <div class="name">VAPID</div>
+          <div class="role">Web push</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right visual: city outline SVG -->
+  <div class="city-visual">
+    <svg width="340" height="280" viewBox="0 0 340 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- City skyline silhouette -->
+      <defs>
+        <linearGradient id="cityGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#ff8a00" stop-opacity=".6"/>
+          <stop offset="100%" stop-color="#e52e71" stop-opacity=".6"/>
+        </linearGradient>
+        <linearGradient id="buildGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(255,255,255,.12)"/>
+          <stop offset="100%" stop-color="rgba(255,255,255,.02)"/>
+        </linearGradient>
+        <filter id="glow2"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <!-- Buildings -->
+      <rect x="10"  y="130" width="30" height="120" rx="2" fill="url(#buildGrad)" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+      <rect x="44"  y="100" width="24" height="150" rx="2" fill="url(#buildGrad)" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+      <rect x="72"  y="60"  width="36" height="190" rx="2" fill="url(#buildGrad)" stroke="rgba(255,255,255,.1)" stroke-width="1"/>
+      <rect x="112" y="90"  width="28" height="160" rx="2" fill="url(#buildGrad)" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+      <rect x="144" y="40"  width="42" height="210" rx="2" fill="rgba(255,255,255,.08)" stroke="rgba(255,138,0,.25)" stroke-width="1.5"/>
+      <rect x="190" y="80"  width="30" height="170" rx="2" fill="url(#buildGrad)" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+      <rect x="224" y="110" width="26" height="140" rx="2" fill="url(#buildGrad)" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+      <rect x="254" y="70"  width="38" height="180" rx="2" fill="url(#buildGrad)" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+      <rect x="296" y="120" width="28" height="130" rx="2" fill="url(#buildGrad)" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+      <!-- Windows glow -->
+      <rect x="152" y="55"  width="6" height="6" rx="1" fill="rgba(255,138,0,.8)" filter="url(#glow2)"/>
+      <rect x="163" y="55"  width="6" height="6" rx="1" fill="rgba(255,138,0,.6)"/>
+      <rect x="152" y="68"  width="6" height="6" rx="1" fill="rgba(255,138,0,.5)"/>
+      <rect x="163" y="68"  width="6" height="6" rx="1" fill="rgba(255,138,0,.8)" filter="url(#glow2)"/>
+      <!-- Ground line -->
+      <line x1="0" y1="250" x2="340" y2="250" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+      <!-- Pin marker -->
+      <circle cx="165" cy="40" r="20" fill="rgba(255,138,0,.15)" stroke="rgba(255,138,0,.5)" stroke-width="1.5" filter="url(#glow2)"/>
+      <text x="165" y="45" text-anchor="middle" font-size="18">📍</text>
+      <!-- Pulse rings -->
+      <circle cx="165" cy="40" r="28" fill="none" stroke="rgba(255,138,0,.2)" stroke-width="1" stroke-dasharray="4 4"/>
+      <circle cx="165" cy="40" r="36" fill="none" stroke="rgba(255,138,0,.1)" stroke-width="1" stroke-dasharray="4 4"/>
+      <!-- Route line -->
+      <path d="M 165 58 Q 200 140 230 160" stroke="url(#cityGrad)" stroke-width="2.5" stroke-linecap="round" fill="none" stroke-dasharray="5 4" opacity=".7"/>
+      <!-- Destination -->
+      <circle cx="230" cy="160" r="8" fill="rgba(229,46,113,.8)" filter="url(#glow2)"/>
+      <circle cx="230" cy="160" r="14" fill="none" stroke="rgba(229,46,113,.3)" stroke-width="1.5"/>
+      <!-- User dot -->
+      <circle cx="165" cy="255" r="5" fill="rgba(255,138,0,.9)" filter="url(#glow2)"/>
+      <circle cx="165" cy="255" r="10" fill="none" stroke="rgba(255,138,0,.3)" stroke-width="1.5"/>
+    </svg>
+  </div>
+
+  <div class="slide-footer">
+    <div class="slide-num">01 / 05</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     SLIDE 2 — PRIVACY BY DESIGN
+══════════════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s2">
+  <div class="slide-bg">
+    <div class="grid-lines"></div>
+    <div class="glow glow-blue"   style="width:320px;height:320px;left:-80px;top:-80px;opacity:.8;"></div>
+    <div class="glow glow-orange" style="width:280px;height:280px;right:5%;bottom:-60px;opacity:.6;"></div>
+  </div>
+
+  <div class="slide-header">
+    <div class="slide-brand"><div class="brand-dot"></div>LocalPulse · Architecture</div>
+    <div class="timestamp-badge">00:10 — 00:25</div>
+  </div>
+
+  <div class="title-area">
+    <div class="slide-title">Privacy by <span class="grad">Design</span></div>
+    <div class="slide-sub">The smartphone is an intelligent edge node — raw data never leaves it.</div>
+  </div>
+
+  <div class="diagram-wrap">
+    <!-- Left: Phone node -->
+    <div class="node">
+      <div class="node-title">📱 User's Device (Edge Node)</div>
+      <div class="node-icon">📱</div>
+      <div class="node-name">ContextEngine <span style="font-size:12px;font-weight:400;color:var(--muted)">· Vanilla JS</span></div>
+
+      <div style="font-size:10px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">Stays in browser RAM — never transmitted:</div>
+      <div class="data-row stays">✓ &nbsp;Raw GPS coordinates</div>
+      <div class="data-row stays">✓ &nbsp;6h movement ring buffer</div>
+      <div class="data-row stays">✓ &nbsp;Full trajectory history</div>
+      <div class="data-row stays">✓ &nbsp;Behavioral snapshots</div>
+
+      <div style="margin-top:12px; font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Computed locally:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+        <span class="tag tag-green" style="font-size:10px;">Pace (m/s)</span>
+        <span class="tag tag-green" style="font-size:10px;">Dwell detect</span>
+        <span class="tag tag-green" style="font-size:10px;">Direction variance</span>
+        <span class="tag tag-green" style="font-size:10px;">Post-errand</span>
+      </div>
+    </div>
+
+    <!-- Middle: Arrow + signal -->
+    <div class="arrow-col">
+      <div class="arrow-label">only 5 abstract<br>fields sent</div>
+      <svg width="80" height="60" viewBox="0 0 80 60">
+        <defs>
+          <linearGradient id="arrGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#ff8a00"/>
+            <stop offset="100%" stop-color="#e52e71"/>
+          </linearGradient>
+        </defs>
+        <path d="M 5 30 L 60 30" stroke="url(#arrGrad)" stroke-width="2.5" stroke-linecap="round"/>
+        <polygon points="60,24 75,30 60,36" fill="url(#arrGrad)"/>
+      </svg>
+      <div class="signal-box">
+{<br>
+  vibe: <span style="color:#86efac">"post_errand"</span>,<br>
+  pace: <span style="color:#86efac">"strolling"</span>,<br>
+  recv: <span style="color:#fcd34d">0.80</span>,<br>
+  fmt:  <span style="color:#86efac">"full_exp"</span><br>
+}
+      </div>
+      <div class="lock-badge">🔒 No PII</div>
+    </div>
+
+    <!-- Right: Server node -->
+    <div class="node server">
+      <div class="node-title">🖥️ FastAPI Server · Germany</div>
+      <div class="node-icon">🇩🇪</div>
+      <div class="node-name">DSGVO-compliant <span style="font-size:12px;font-weight:400;color:var(--muted)">server</span></div>
+
+      <div style="font-size:10px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">What OpenAI receives:</div>
+      <div class="data-row stays">✓ &nbsp;Merchant category</div>
+      <div class="data-row stays">✓ &nbsp;Weather context</div>
+      <div class="data-row stays">✓ &nbsp;Vibe state (abstract)</div>
+      <div class="data-row gone">✗ &nbsp;No GPS coordinates</div>
+      <div class="data-row gone">✗ &nbsp;No user identity</div>
+      <div class="data-row gone">✗ &nbsp;No movement history</div>
+
+      <div class="server-stack" style="margin-top:12px;">
+        <div class="ss-row"><div class="ss-dot"></div>No user profiles stored — session only</div>
+        <div class="ss-row"><div class="ss-dot"></div>Full erasure trivial — nothing persisted</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <div class="slide-num">02 / 05</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     SLIDE 3 — CONTEXT LAYERING & AI
+══════════════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s3">
+  <div class="slide-bg">
+    <div class="grid-lines"></div>
+    <div class="glow glow-orange" style="width:360px;height:360px;left:30%;top:-120px;opacity:.7;"></div>
+    <div class="glow glow-pink"   style="width:280px;height:280px;right:-60px;bottom:-60px;opacity:.6;"></div>
+  </div>
+
+  <div class="slide-header">
+    <div class="slide-brand"><div class="brand-dot"></div>LocalPulse · Offer Engine</div>
+    <div class="timestamp-badge">00:25 — 00:45</div>
+  </div>
+
+  <div class="title-area">
+    <div class="slide-title">5 Signals. <span class="grad">One Perfect Offer.</span></div>
+    <div class="slide-sub">Context layering feeds a dynamic AI prompt — the output changes with every vibe state.</div>
+  </div>
+
+  <div class="funnel-wrap">
+    <!-- Signals -->
+    <div class="signals-col">
+      <div class="sig-card" style="border-color:rgba(14,165,233,.25);background:rgba(14,165,233,.07)">
+        <div class="sig-ico">🌡️</div>
+        <div>
+          <div class="sig-name" style="color:#7dd3fc;">Weather</div>
+          <div class="sig-val">Open-Meteo · real-time · 28°C sunny</div>
+        </div>
+      </div>
+      <div class="sig-card" style="border-color:rgba(16,185,129,.25);background:rgba(16,185,129,.07)">
+        <div class="sig-ico">🏪</div>
+        <div>
+          <div class="sig-name" style="color:#34d399;">Payone Demand</div>
+          <div class="sig-val">Transaction density · 67% below expected</div>
+        </div>
+      </div>
+      <div class="sig-card" style="border-color:rgba(245,158,11,.25);background:rgba(245,158,11,.07)">
+        <div class="sig-ico">🕐</div>
+        <div>
+          <div class="sig-name" style="color:#fcd34d;">Time + Calendar</div>
+          <div class="sig-val">Feierabend · Sunday · no holiday</div>
+        </div>
+      </div>
+      <div class="sig-card" style="border-color:rgba(167,139,250,.25);background:rgba(167,139,250,.07)">
+        <div class="sig-ico">🎪</div>
+        <div>
+          <div class="sig-name" style="color:#c4b5fd;">Local Events</div>
+          <div class="sig-val">Stadtfest · high foot traffic</div>
+        </div>
+      </div>
+      <div class="sig-card" style="border-color:rgba(255,138,0,.35);background:rgba(255,138,0,.08)">
+        <div class="sig-ico">🧠</div>
+        <div>
+          <div class="sig-name" style="color:var(--orange);">User Vibe (on-device)</div>
+          <div class="sig-val">post_errand · strolling · receptivity 80%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Arrow to AI -->
+    <div class="arrow-mid">
+      <svg width="50" height="100" viewBox="0 0 50 100">
+        <defs><linearGradient id="ag2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff8a00"/><stop offset="100%" stop-color="#e52e71"/></linearGradient></defs>
+        <path d="M 25 5 L 25 80" stroke="url(#ag2)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6 4"/>
+        <polygon points="18,80 25,95 32,80" fill="url(#ag2)"/>
+      </svg>
+    </div>
+
+    <!-- AI box -->
+    <div class="ai-col">
+      <div class="ai-box">
+        <div class="ai-icon">🤖</div>
+        <div class="ai-name grad">Gemma 4 2B</div>
+        <div class="ai-sub">Structured JSON output · strict schema · vibe-aware tone prompt</div>
+        <div style="margin-top:12px;padding:8px;background:rgba(0,0,0,.3);border-radius:8px;font-family:var(--mono);font-size:9.5px;color:rgba(255,255,255,.6);text-align:left;line-height:1.6;">
+          "Ton-Anweisung: belohnend,<br>
+          euphorisch. 'Du hast es dir<br>
+          verdient'-Feeling..."
+        </div>
+      </div>
+    </div>
+
+    <!-- Arrow to output -->
+    <div class="arrow-mid">
+      <svg width="50" height="100" viewBox="0 0 50 100">
+        <defs><linearGradient id="ag3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e52e71"/><stop offset="100%" stop-color="#ff8a00"/></linearGradient></defs>
+        <path d="M 25 5 L 25 80" stroke="url(#ag3)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6 4"/>
+        <polygon points="18,80 25,95 32,80" fill="url(#ag3)"/>
+      </svg>
+    </div>
+
+    <!-- Output examples -->
+    <div class="output-col">
+      <div class="offer-example ex-lingering">
+        <div class="vibe-tag vibe-lingering">🧍 lingering</div>
+        <div class="offer-title">"Zeit für eine Pause bei Danny's ☕"</div>
+        <div class="offer-desc">Kein Stress – setz dich, 25% auf alles.</div>
+      </div>
+      <div class="offer-example ex-commuting">
+        <div class="vibe-tag vibe-commuting">⚡ commuting</div>
+        <div class="offer-title">"Schnell vorbei? 25% Eis to-go ⚡"</div>
+        <div class="offer-desc">QR zeigen, 30 Sek., fertig. Kein Warten.</div>
+      </div>
+      <div class="offer-example ex-post">
+        <div class="vibe-tag vibe-post">✅ post_errand</div>
+        <div class="offer-title">"Workout geschafft? Eis verdient! 🍦"</div>
+        <div class="offer-desc">25% – du weißt, du willst es.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <div class="slide-num">03 / 05</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     SLIDE 4 — API JSON RESPONSE
+══════════════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s4">
+  <div class="slide-bg">
+    <div class="grid-lines"></div>
+    <div class="glow glow-blue" style="width:300px;height:300px;right:10%;top:-80px;opacity:.7;"></div>
+    <div class="glow glow-pink" style="width:260px;height:260px;left:-60px;bottom:-60px;opacity:.5;"></div>
+  </div>
+
+  <div class="slide-header">
+    <div class="slide-brand"><div class="brand-dot"></div>LocalPulse · API Response</div>
+    <div class="timestamp-badge">00:35 — 00:45</div>
+  </div>
+
+  <div class="title-area">
+    <div class="slide-title">Context → JSON <span class="grad">in milliseconds.</span></div>
+    <div class="slide-sub">Structured output enforced by OpenAI's JSON schema mode — no hallucinated fields.</div>
+  </div>
+
+  <div class="content">
+    <!-- Code block -->
+    <div class="code-wrap">
+      <div class="code-bar">
+        <div class="dot" style="background:#ff5f56;"></div>
+        <div class="dot" style="background:#ffbd2e;"></div>
+        <div class="dot" style="background:#27c93f;"></div>
+        <div class="code-label">POST /api/offer → 200 OK</div>
+      </div>
+      <pre><span class="key">"status"</span>:         <span class="str">"success"</span>,
+<span class="key">"merchant_name"</span>:   <span class="str">"Danny's Eisdiele"</span>,
+<span class="key">"category"</span>:        <span class="str">"ice_cream"</span>,
+<span class="key">"distance_m"</span>:      <span class="num">80</span>,
+<span class="key">"offer"</span>: {
+  <span class="key">"title"</span>:       <span class="str hl">"Workout geschafft? Eis verdient! 🍦"</span>,
+  <span class="key">"description"</span>: <span class="str hl">"25% – du weißt, du willst es."</span>,
+  <span class="key">"discount_pct"</span>: <span class="num">25</span>,
+  <span class="key">"source"</span>:      <span class="str">"openai"</span>
+},
+<span class="key">"context_state"</span>: {
+  <span class="key">"signals"</span>: [
+    { <span class="key">"icon"</span>:<span class="str">"🧠"</span>, <span class="key">"label"</span>:<span class="str">"Post errand · 80% receptivity"</span>, <span class="key">"type"</span>:<span class="str">"vibe"</span> },
+    { <span class="key">"icon"</span>:<span class="str">"🌡"</span>, <span class="key">"label"</span>:<span class="str">"28°C · sunny"</span>,                  <span class="key">"type"</span>:<span class="str">"weather"</span> },
+    { <span class="key">"icon"</span>:<span class="str">"🏪"</span>, <span class="key">"label"</span>:<span class="str">"67% below usual traffic"</span>,        <span class="key">"type"</span>:<span class="str">"demand"</span> }
+  ],
+  <span class="cmt">// GDPR note returned to UI:</span>
+  <span class="key">"gdpr_note"</span>: <span class="str">"Dein GPS bleibt auf deinem Gerät."</span>
+},
+<span class="key">"expires_in_sec"</span>:   <span class="num">900</span>
+</pre>
+    </div>
+
+    <!-- Callouts -->
+    <div class="callouts">
+      <div class="callout highlight">
+        <div class="c-icon">🎯</div>
+        <div class="c-title">Vibe-Aware Copy</div>
+        <div class="c-text">The offer title and description change per vibe state. Same merchant — completely different tone depending on how you're walking.</div>
+      </div>
+      <div class="callout">
+        <div class="c-icon">🔒</div>
+        <div class="c-title">Zero PII in Response</div>
+        <div class="c-text">No name, no user ID, no GPS. The GDPR note is returned in the payload and displayed directly in the UI.</div>
+      </div>
+      <div class="callout">
+        <div class="c-icon">⚙️</div>
+        <div class="c-title">Strict JSON Schema</div>
+        <div class="c-text">OpenAI's <code style="font-family:var(--mono);font-size:10px;background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;">response_format: json_schema</code> with <code style="font-family:var(--mono);font-size:10px;background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;">strict: true</code> — no post-processing needed.</div>
+      </div>
+      <div class="callout">
+        <div class="c-icon">🔄</div>
+        <div class="c-title">Template Fallback</div>
+        <div class="c-text">Works without an API key. A vibe-aware template matrix ensures the demo runs fully offline.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <div class="slide-num">04 / 05</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     SLIDE 5 — CHECKOUT / CONCLUSION
+══════════════════════════════════════════════════════════════════════ -->
+<div class="slide" id="s5">
+  <div class="slide-bg">
+    <div class="grid-lines"></div>
+    <div class="glow glow-orange" style="width:280px;height:280px;left:-60px;top:20%;opacity:.8;"></div>
+    <div class="glow glow-pink"   style="width:320px;height:320px;right:-60px;top:-80px;opacity:.7;"></div>
+    <div class="glow glow-blue"   style="width:240px;height:240px;right:20%;bottom:-60px;opacity:.5;"></div>
+  </div>
+
+  <div class="slide-header">
+    <div class="slide-brand"><div class="brand-dot"></div>LocalPulse · Checkout</div>
+    <div class="timestamp-badge">00:45 — 01:00</div>
+  </div>
+
+  <div class="title-area">
+    <div class="slide-title">The Complete <span class="grad">Loop.</span></div>
+    <div class="slide-sub">From quiet merchant hour to cashback in wallet — fully connected, zero stubs.</div>
+  </div>
+
+  <!-- Loop diagram -->
+  <div class="loop-wrap">
+    <svg width="720" height="120" viewBox="0 0 720 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="lg1" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#ff8a00"/>
+          <stop offset="100%" stop-color="#e52e71"/>
+        </linearGradient>
+        <filter id="nodeGlow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+
+      <!-- Connector lines -->
+      <line x1="120" y1="52" x2="185" y2="52" stroke="url(#lg1)" stroke-width="2" stroke-dasharray="5 3" opacity=".6"/>
+      <polygon points="182,46 195,52 182,58" fill="url(#lg1)" opacity=".8"/>
+
+      <line x1="255" y1="52" x2="315" y2="52" stroke="url(#lg1)" stroke-width="2" stroke-dasharray="5 3" opacity=".6"/>
+      <polygon points="312,46 325,52 312,58" fill="url(#lg1)" opacity=".8"/>
+
+      <line x1="390" y1="52" x2="450" y2="52" stroke="url(#lg1)" stroke-width="2" stroke-dasharray="5 3" opacity=".6"/>
+      <polygon points="447,46 460,52 447,58" fill="url(#lg1)" opacity=".8"/>
+
+      <line x1="520" y1="52" x2="580" y2="52" stroke="url(#lg1)" stroke-width="2" stroke-dasharray="5 3" opacity=".6"/>
+      <polygon points="577,46 590,52 577,58" fill="url(#lg1)" opacity=".8"/>
+
+      <!-- Step nodes -->
+      <!-- 1: Context -->
+      <rect x="0" y="16" width="120" height="72" rx="14" fill="rgba(255,255,255,.05)" stroke="rgba(255,138,0,.35)" stroke-width="1.5" filter="url(#nodeGlow)"/>
+      <text x="60" y="44" text-anchor="middle" font-size="22" font-family="sans-serif">🧠</text>
+      <text x="60" y="62" text-anchor="middle" font-size="11" fill="#f0f0f8" font-family="Inter,sans-serif" font-weight="700">Context</text>
+      <text x="60" y="76" text-anchor="middle" font-size="9"  fill="rgba(255,255,255,.4)" font-family="Inter,sans-serif">GPS · Weather · Vibe</text>
+
+      <!-- 2: AI Offer -->
+      <rect x="195" y="16" width="120" height="72" rx="14" fill="rgba(255,255,255,.05)" stroke="rgba(229,46,113,.35)" stroke-width="1.5"/>
+      <text x="255" y="44" text-anchor="middle" font-size="22" font-family="sans-serif">🤖</text>
+      <text x="255" y="62" text-anchor="middle" font-size="11" fill="#f0f0f8" font-family="Inter,sans-serif" font-weight="700">AI Offer</text>
+      <text x="255" y="76" text-anchor="middle" font-size="9"  fill="rgba(255,255,255,.4)" font-family="Inter,sans-serif">Gemma 4 2B</text>
+
+      <!-- 3: Accept + 3D Map -->
+      <rect x="325" y="16" width="120" height="72" rx="14" fill="rgba(255,255,255,.05)" stroke="rgba(59,130,246,.35)" stroke-width="1.5"/>
+      <text x="385" y="44" text-anchor="middle" font-size="22" font-family="sans-serif">🗺️</text>
+      <text x="385" y="62" text-anchor="middle" font-size="11" fill="#f0f0f8" font-family="Inter,sans-serif" font-weight="700">Accept + Map</text>
+      <text x="385" y="76" text-anchor="middle" font-size="9"  fill="rgba(255,255,255,.4)" font-family="Inter,sans-serif">3D fly-to · route</text>
+
+      <!-- 4: QR Checkout -->
+      <rect x="460" y="16" width="120" height="72" rx="14" fill="rgba(255,255,255,.05)" stroke="rgba(16,185,129,.35)" stroke-width="1.5"/>
+      <text x="520" y="44" text-anchor="middle" font-size="22" font-family="sans-serif">📲</text>
+      <text x="520" y="62" text-anchor="middle" font-size="11" fill="#f0f0f8" font-family="Inter,sans-serif" font-weight="700">QR Checkout</text>
+      <text x="520" y="76" text-anchor="middle" font-size="9"  fill="rgba(255,255,255,.4)" font-family="Inter,sans-serif">Dynamic token · POS</text>
+
+      <!-- 5: Wallet -->
+      <rect x="590" y="16" width="130" height="72" rx="14" fill="rgba(255,138,0,.08)" stroke="rgba(255,138,0,.5)" stroke-width="2" filter="url(#nodeGlow)"/>
+      <text x="655" y="44" text-anchor="middle" font-size="22" font-family="sans-serif">💰</text>
+      <text x="655" y="62" text-anchor="middle" font-size="11" fill="#f0f0f8" font-family="Inter,sans-serif" font-weight="700">Wallet Cashback</text>
+      <text x="655" y="76" text-anchor="middle" font-size="9"  fill="rgba(255,255,255,.4)" font-family="Inter,sans-serif">+€ · SQLite · instant</text>
+    </svg>
+  </div>
+
+  <!-- Three pillars -->
+  <div style="position:absolute;bottom:70px;left:36px;right:36px;display:flex;gap:16px;">
+    <div class="glass" style="flex:1;padding:16px 18px;border-color:rgba(255,138,0,.2);">
+      <div style="font-size:20px;margin-bottom:6px;">🎯</div>
+      <div style="font-size:13px;font-weight:800;margin-bottom:4px;">Context-Aware</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.5;">5 real-time signals fused per request. The right offer, at the right moment, for the right person.</div>
+    </div>
+    <div class="glass" style="flex:1;padding:16px 18px;border-color:rgba(229,46,113,.2);">
+      <div style="font-size:20px;margin-bottom:6px;">🤖</div>
+      <div style="font-size:13px;font-weight:800;margin-bottom:4px;">AI-Driven</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.5;">No pre-defined coupons. Every offer is generated live by Gemma 4 2B with vibe-specific tone.</div>
+    </div>
+    <div class="glass" style="flex:1;padding:16px 18px;border-color:rgba(16,185,129,.2);">
+      <div style="font-size:20px;margin-bottom:6px;">🔒</div>
+      <div style="font-size:13px;font-weight:800;margin-bottom:4px;">100% Privacy-First</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.5;">Raw GPS never leaves the device. OpenAI sees only abstract behavioral metadata. DSGVO-compliant by architecture.</div>
+    </div>
+  </div>
+
+  <div class="tagline">
+    <div class="tagline-text"><span class="grad">LocalPulse</span> — context-aware · AI-driven · 100% privacy-first.</div>
+  </div>
+
+  <div class="slide-footer" style="bottom:0;">
+    <div class="slide-num">05 / 05</div>
+  </div>
+</div>
+
+</body>
+</html>

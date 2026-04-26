@@ -6,11 +6,11 @@ Die KI-Integration ist vollständig in `ai_service.py` umgesetzt.
 
 ---
 
-## Architektur-Entscheidung: OpenAI (gpt-4o-mini)
-Wir nutzen die **OpenAI API** (`gpt-4o-mini`), da sie das beste Verhältnis aus Geschwindigkeit, Kosten und Zuverlässigkeit für unseren Use-Case bietet:
-- **Schnell & günstig** – Das Mini-Modell ist ideal für die Echtzeit-Generierung bei jedem Standort-Request.
+## Architektur-Entscheidung: Gemma 4 2B (Privacy-First)
+Wir nutzen **Gemma 4 2B** lokal, da das Modell on-premise läuft und keinerlei Nutzerdaten das Rechenzentrum verlassen:
+- **Privacy by Design** – Kein API-Call zu einem Drittanbieter. Alle Inferenz bleibt auf dem deutschen Server.
 - **Zuverlässiges JSON** – Wir nutzen `response_format={"type": "json_schema"}`, um sauberes JSON (`{title, description}`) zu erzwingen.
-- **Robustes Fallback** – Ein lokales Template-System springt nahtlos ein, falls kein API-Key gesetzt ist oder offline demonstriert werden muss.
+- **Robustes Fallback** – Ein lokales Template-System springt nahtlos ein, falls das Modell nicht verfügbar ist oder offline demonstriert werden muss.
 
 ---
 
@@ -58,7 +58,7 @@ Antwort mit Key  → `"source": "openai"`
 
 | Komponente | Detail |
 |---|---|
-| Modell | `gpt-4o-mini` – schnell & kosteneffizient |
+| Modell | `gemma-4-2b` – schnell & kosteneffizient |
 | Structured Output | JSON Schema (`strict: True`) → garantiert valides JSON |
 | System-Prompt | Marketing-Experte, deutsche Texte, max. 3s Lesedauer |
 | Wetter-Mapping | WMO-Codes → `heiss_sonnig`, `warm`, `regen`, `kalt`, `schnee` |
@@ -68,7 +68,7 @@ Antwort mit Key  → `"source": "openai"`
 ```
 Händlerdaten + Wetter + Rabatt
         ↓
-OpenAI gpt-4o-mini
+OpenAI gemma-4-2b
         ↓
 { "title": "≤50 Zeichen", "description": "≤80 Zeichen" }
         ↓

@@ -5,7 +5,7 @@ Challenge 01 · Generative City-Wallet · DSV-Gruppe × Hack-Nation
 
 Implements all three required modules:
   01 Context Sensing Layer  — weather + location + Payone demand + local events
-  02 Generative Offer Engine — GPT-4o-mini; merchant sets rules, AI creates offer
+  02 Generative Offer Engine — Gemma 4 2B; merchant sets rules, AI creates offer
   03 Checkout & Redemption   — dynamic QR token → /api/redeem → wallet cashback
 
 Start:
@@ -28,7 +28,7 @@ from dotenv import load_dotenv
 
 from payone_mock import get_payone_signal, _register_merchants
 from ai_service import generate_offer_text
-from events_mock import get_active_events, composite_label, get_time_slot
+from events_mock import get_active_events, composite_label, get_time_slot, get_calendar_context
 from database import (
     init_db,
     upsert_subscription, delete_subscription, all_subscriptions, subscription_count,
@@ -261,6 +261,13 @@ class ContextRequest(BaseModel):
     temperature:  float
     weather_code: int
     radius_m:     float = 1000.0
+    # IntentSignal — computed on-device, no raw GPS contained
+    # Privacy: user_lat/lng used only to find nearby merchants, never stored or forwarded to AI
+    vibe_state:       str   = "unknown"         # lingering|exploring|strolling|commuting|post_errand
+    pace_class:       str   = "unknown"         # stopped|strolling|walking|fast
+    receptivity:      float = 0.5               # 0.0–1.0 how open user is to stopping
+    offer_format:     str   = "full_experience" # quick_grab|full_experience
+    activity_context: str   = "unknown"         # leisure|commuting|post_errand
 
 
 def _haversine(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
@@ -289,7 +296,7 @@ def get_personalized_offer(context: ContextRequest):
       3. Collect local events + time slot (additional context signals)
       4. Pick the quietest candidate
       5. Apply merchant settings (may override JSON discount)
-      6. Generate offer text via GPT-4o-mini (or template fallback)
+      6. Generate offer text via Gemma 4 2B (or template fallback)
       7. Return offer + composite context state for the UI
 
     Privacy: raw GPS never leaves this server.
@@ -349,16 +356,32 @@ def get_personalized_offer(context: ContextRequest):
         "limits": {**merchant["limits"], "max_discount_pct": effective_discount},
     }
 
-    # ── Generate offer text (GPT-4o-mini or template fallback) ───────────────
+    # ── Generate offer text (Gemma 4 2B or template fallback) ───────────────
+    calendar = get_calendar_context()
     offer_text = generate_offer_text(merchant_for_ai, {
         **context.model_dump(),
-        "events":    [e["name"] for e in active_events],
-        "time_slot": time_slot,
+        "events":           [e["name"] for e in active_events],
+        "time_slot":        time_slot,
+        "weekday_name":     calendar["weekday_name"],
+        "is_weekend":       calendar["is_weekend"],
+        "holiday_name":     calendar["holiday_name"],
+        # IntentSignal (already in context.model_dump() but named explicitly for clarity)
+        "vibe_state":       context.vibe_state,
+        "pace_class":       context.pace_class,
+        "receptivity":      context.receptivity,
+        "offer_format":     context.offer_format,
+        "activity_context": context.activity_context,
     })
 
     lng, lat      = merchant["location"]
     ctx_label     = composite_label(context.temperature, condition, quiet_score, active_events, now.hour)
     quiet_pct     = round(quiet_score * 100)
+
+    calendar_signals: list[dict] = []
+    if calendar["holiday_name"]:
+        calendar_signals.append({"icon": "🎉", "label": calendar["holiday_name"], "type": "event"})
+    elif calendar["is_weekend"]:
+        calendar_signals.append({"icon": "🌅", "label": calendar["weekday_name"], "type": "event"})
 
     return {
         "status":              "success",
@@ -368,23 +391,30 @@ def get_personalized_offer(context: ContextRequest):
         "category":            merchant["category"],
         "targetLngLat":        merchant["location"],
         "offer":               offer_text,
+        "alternatives":        offer_text.get("alternatives", []),
         "distance_m":          round(dist),
         "social_proof_coords": _social_proof_coords(lng, lat),
         "payone_signal":       signal,
         "expires_in_sec":      900,
         # ── Module 01 output — composite context state ────────────────────────
         "context_state": {
-            "label":     ctx_label,
-            "time_slot": time_slot,
-            "events":    active_events,
+            "label":        ctx_label,
+            "time_slot":    time_slot,
+            "weekday_name": calendar["weekday_name"],
+            "is_weekend":   calendar["is_weekend"],
+            "holiday_name": calendar["holiday_name"],
+            "events":       active_events,
             "signals": [
                 {"icon": "🌡", "label": f"{round(context.temperature)}°C · {condition}", "type": "weather"},
                 {"icon": "🏪", "label": f"{quiet_pct}% below usual traffic",              "type": "demand"},
                 {"icon": "🕐", "label": time_slot.capitalize(),                            "type": "time"},
+                *([{"icon": "🧠", "label": context.vibe_state.replace("_", " ").capitalize() + f" · {round(context.receptivity*100)}% receptivity", "type": "vibe"}]
+                  if context.vibe_state != "unknown" else []),
+                *calendar_signals,
                 *[{"icon": e["icon"], "label": e["name"], "type": "event"} for e in active_events],
             ],
-            # GDPR: raw GPS never sent to OpenAI — only abstract category + weather string
-            "gdpr_note": "Your GPS stays on your device. Only offer category and weather context are sent to the AI.",
+            # GDPR: raw GPS never sent to OpenAI or stored — only abstract vibe + category + weather
+            "gdpr_note": "Dein GPS bleibt auf deinem Gerät. Nur anonyme Verhaltens-Signale & Wetter werden gesendet.",
         },
     }
 

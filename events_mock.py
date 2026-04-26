@@ -8,7 +8,7 @@ To swap in a real source: replace get_active_events() with an API call.
 No codebase change needed — just this file.
 """
 
-from datetime import datetime
+from datetime import date, datetime
 
 # weekday: 0=Mon … 6=Sun
 _EVENTS: list[dict] = [
@@ -61,6 +61,29 @@ _EVENTS: list[dict] = [
         "description": "University open day — visitors from outside the city.",
     },
 ]
+
+
+# German public holidays (federal + Hesse) — fixed dates only (no Easter calc)
+_HOLIDAYS: dict[tuple[int, int], str] = {
+    (1,  1):  "Neujahr",
+    (5,  1):  "Tag der Arbeit",
+    (10, 3):  "Tag der Deutschen Einheit",
+    (11, 1):  "Allerheiligen",
+    (12, 25): "1. Weihnachtstag",
+    (12, 26): "2. Weihnachtstag",
+}
+
+
+def get_calendar_context(today: date | None = None) -> dict:
+    """Returns weekday name, weekend flag, and holiday name (or None) for a date."""
+    d = today or date.today()
+    weekday_names = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
+    return {
+        "weekday_name": weekday_names[d.weekday()],
+        "weekday_num":  d.weekday(),          # 0=Mon … 6=Sun
+        "is_weekend":   d.weekday() >= 5,
+        "holiday_name": _HOLIDAYS.get((d.month, d.day)),
+    }
 
 
 def get_active_events(weekday: int | None = None, hour: int | None = None) -> list[dict]:
