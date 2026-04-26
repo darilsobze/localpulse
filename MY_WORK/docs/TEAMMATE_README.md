@@ -1,0 +1,44 @@
+# LocalPulse 🏙️✨
+**Die Generative City Wallet**
+
+> *LocalPulse ist keine weitere statische Coupon-App, sondern ein intelligenter Begleiter für die Innenstadt. Wir nutzen Echtzeit-Signale (Wetter, Location, Payone-Transaktionsdaten) und Generative AI, um Angebote nicht einfach nur anzuzeigen, sondern in Echtzeit zu erschaffen.*
+
+Das Ergebnis: **Hyperpersonalisierte Erlebnisse** für Nutzer und ein müheloses, **zielbasiertes Marketing-Tool** für lokale Händler.
+
+---
+
+## 🚀 Der Elevator Pitch
+
+LocalPulse schließt die Lücke zwischen digitaler Intelligenz und lokalem Handel. Statt Händler mit komplexen Marketing-Dashboards zu überfordern und Nutzer mit irrelevanter Werbung zu spammen, setzen wir auf **Smart Push** und **Generative UI**. Angebote entstehen genau dann, wenn der Kontext (Hitze + Flaute im Eiscafé) perfekt ist.
+
+## 👥 Die zwei Perspektiven
+
+### 1. Consumer View: Der perfekte Moment
+Wir holen den Nutzer physisch und emotional ab. Die User Journey ist auf maximale Conversion und minimalen kognitiven Aufwand (3-Sekunden-Regel) optimiert.
+
+*   **Der kontext-sensitive Trigger:** Die App erkennt Location und Wetter. Ein lokales SLM (Small Language Model) auf dem Gerät weiß aus der Wallet-Historie um die Vorlieben des Nutzers.
+*   **Das 3-Sekunden-GenUI:** Kein überladenes Menü. Ein dynamisch generiertes Widget erscheint. Ein klares Visual, ein Countdown (FOMO) und zwei Buttons.
+*   **Der WOW-Effekt (Social Proof):** Bei Annahme morpht das UI in eine immersive 3D-Stadtkarte. Animierte Avatare zeigen andere Nutzer, die das Angebot ebenfalls nutzen – das schafft Community-Gefühl. (Siehe `WOW_EFFECT_3D.md`)
+*   **Seamless Checkout:** Zahlung per generiertem QR-Code über die City Wallet. Cashback/Rabatt wird automatisch im Hintergrund verrechnet.
+
+### 2. Merchant View: Der KI-Assistent
+Händler müssen keine Werbetexter sein. Das Dashboard ist ein digitaler Berater.
+
+*   **Zielbasierte Leitplanken:** Der Händler definiert ein Ziel (z.B. "Flauten füllen") und setzt Limits (z.B. "Max. 20% Rabatt"). 
+*   **Open Offers (KI auf der Lauer):** Angebote existieren nicht vorab. Sie werden live von der generativen KI erschaffen, sobald Payone-Daten eine Flaute melden und ein passender Nutzer in der Nähe ist.
+*   **Klartext-Insights:** Statt Excel-Tabellen gibt die KI konkrete Handlungsempfehlungen (z.B. "Radius verkleinern, um Conversion zu erhöhen").
+
+---
+
+## 🛠️ Tech Stack & Strategy (Warum wir gewinnen)
+
+*   **Privacy by Design (DSGVO-konform):** Wir nutzen On-Device Small Language Models (SLMs). Persönliche Daten verlassen niemals das Smartphone. Der Server erhält nur abstrakte "Intents" (z.B. "Sucht nach Abkühlung").
+*   **Context-Sensing-Layer:** Integration von OpenWeatherMap, Location-Services und **simulierten Payone-Transaktionsdichten** als zentrales Asset der DSV-Gruppe.
+*   **Immersive Frontend:** Nutzung von Mapbox GL JS für kinoreife 3D-Karten und Morphing-Animationen.
+
+---
+
+## 🏁 Lokales Setup
+
+1. Repository klonen.
+2. Für die 3D-Karten-Demo: Öffne `demo_3d_map.html` im Browser. (Detaillierte Infos in `WOW_EFFECT_3D.md`)
