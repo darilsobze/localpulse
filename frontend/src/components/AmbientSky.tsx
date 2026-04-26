@@ -1,21 +1,25 @@
-import { useMemo } from 'react';
+const motes = Array.from({ length: 22 }, (_, i) => {
+  const seed = i + 1;
+
+  return {
+    left: (seed * 37) % 100,
+    delay: (seed * 1.7) % 14,
+    size: 2 + ((seed * 13) % 40) / 10,
+    duration: 12 + ((seed * 19) % 100) / 10,
+    opacity: 0.4 + ((seed * 11) % 50) / 100,
+  };
+});
 
 export default function AmbientSky() {
-  const motes = useMemo(
-    () =>
-      Array.from({ length: 22 }).map(() => ({
-        left: Math.random() * 100,
-        delay: Math.random() * 14,
-        size: 2 + Math.random() * 4,
-        duration: 12 + Math.random() * 10,
-        opacity: 0.4 + Math.random() * 0.5,
-      })),
-    []
-  );
-
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       <div className="absolute inset-0 sky-hot-noon sky-shimmer animate-shimmer" />
+      <div className="absolute inset-0 ambient-flow">
+        <div className="flow-orb flow-orb-one" />
+        <div className="flow-orb flow-orb-two" />
+        <div className="flow-orb flow-orb-three" />
+      </div>
+      <div className="absolute inset-0 warm-current" />
       <div className="absolute -top-20 -right-20 w-[60vw] h-[60vw] rounded-full"
         style={{
           background: 'radial-gradient(circle, rgba(255,255,220,0.95) 0%, rgba(255,210,130,0.6) 25%, transparent 60%)',

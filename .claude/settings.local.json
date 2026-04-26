@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git fetch *)",
+      "Bash(git show *)",
+      "Bash(python -c \"import sys; sys.path.insert\\(0,'.'\\); import os; os.environ.setdefault\\('VAPID_PUBLIC_KEY','x'\\); os.environ.setdefault\\('VAPID_PRIVATE_KEY','x'\\); from main import app; print\\('OK routes:'\\); [print\\(' ',r.path\\) for r in app.routes if hasattr\\(r,'path'\\)]\")",
+      "Bash(./.venv/Scripts/python.exe -c ' *)",
+      "Bash(./.venv/Scripts/python.exe -m pip install \"openai>=1.30.0\")",
+      "Bash(./.venv/Scripts/python.exe *)",
+      "Bash(curl -s http://127.0.0.1:8000/health)",
+      "Bash(curl -s http://127.0.0.1:8000/merchants)",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/offer -H \"Content-Type: application/json\" -d '{\"user_lng\":8.6520,\"user_lat\":49.8730,\"temperature\":28,\"weather_code\":0,\"radius_m\":1500}')",
+      "Bash(curl -s \"http://127.0.0.1:8000/weather\")"
+    ]
+  }
+}
