@@ -1,0 +1,34 @@
+Konzeptbeschreibung: LocalPulse – Die Generative City Wallet
+Der Elevator Pitch:
+LocalPulse ist keine weitere statische Coupon-App, sondern ein intelligenter Begleiter für die Innenstadt. Wir nutzen Echtzeit-Signale (Wetter, Location, Payone-Transaktionsdaten) und Generative AI, um Angebote nicht einfach nur anzuzeigen, sondern in Echtzeit zu erschaffen. Das Ergebnis: Hyperpersonalisierte Erlebnisse für Nutzer und ein müheloses, zielbasiertes Marketing-Tool für lokale Händler.
+
+1. Die User Experience (Consumer View): Der perfekte Moment
+Wir holen den Nutzer genau da ab, wo er sich befindet – physisch und emotional. Die User Journey ist auf maximale Conversion und minimalen kognitiven Aufwand (3-Sekunden-Regel) optimiert.
+
+Schritt 1: Der kontext-sensitive Trigger (Lockscreen)
+Daril läuft an einem 30°C heißen Dienstagnachmittag über den Luisenplatz. Die App erkennt den Kontext (Location, Wetter). Im Hintergrund signalisiert die Payone-Schnittstelle: Bei "Danny’s Eis Shop" (3 Min. entfernt) ist gerade eine Flaute. Das lokale KI-Modell (On-Device SLM) weiß aus Darils Wallet-Historie, dass er bei Hitze oft Eis kauft. Er erhält einen smarten Push: "30°C am Luisenplatz! 🍦 20% auf dein Spaghettieis bei Danny's. Abkühlung gefällig?"
+
+Schritt 2: Das 3-Sekunden-GenUI (Entscheidung)
+Ein Klick auf die Benachrichtigung öffnet kein überladenes Menü, sondern ein dynamisch generiertes Widget (GenUI). Ein kühles Eis-Visual, ein Countdown (15 Minuten Gültigkeit) und zwei klare Buttons: "Nehm ich!" oder "Vielleicht später". Das Angebot wird sofort verstanden.
+
+Schritt 3: Der WOW-Effekt & Social Proof
+Sobald Daril akzeptiert, entfaltet sich die Magie: Das Widget morpht in eine immersive 3D-Stadtkarte (Darmstadt). Eine animierte Route zeigt den Weg. Der Clou: Kleine Avatare zeigen an, wie viele andere City-Wallet-Nutzer das Angebot gerade ebenfalls nutzen – das schafft Social Proof und ein Community-Gefühl.
+
+Schritt 4: Seamless Checkout
+An der Kasse scannt Daril lediglich einen dynamisch generierten QR-Code. Die Zahlung erfolgt über die City Wallet, der Rabatt (Cashback) wird automatisch verrechnet.
+
+2. Das Händler-Dashboard (Merchant View): Der KI-Assistent
+Eine City Wallet funktioniert nur, wenn die Händler sie nutzen. Deshalb befreien wir sie von komplexen Marketing-Tools. Das Dashboard agiert wie ein digitaler Geschäftsberater.
+
+Zielbasierte Regeln ("Leitplanken"): Danny muss keine Werbetexte schreiben. Er wählt ein Ziel ("Flauten füllen") und setzt Leitplanken: "Maximal 20% Rabatt, aktivieren wenn Payone < 5 Transaktionen/Stunde meldet." Den Rest (Wording, Bildauswahl, Timing) übernimmt die Generative AI.
+
+Open Offers (Die KI auf der Lauer): Die Angebote existieren nicht vorab in einer Datenbank. Sie werden live generiert, sobald ein Nutzer (wie Daril) in den perfekten Kontext (Hitze + Nähe) tritt und Dannys Leitplanken greifen.
+
+LLM-basierte Analysen (Klartext-Insights): Statt unübersichtlicher Excel-Tabellen erhält Danny konkrete Handlungsempfehlungen. Die KI analysiert in Echtzeit: "Dein Eis-Angebot wird gut angenommen, aber viele Nutzer über 500m Entfernung brechen ab. Sollen wir den Radius verkleinern, um die Conversion Rate zu erhöhen?"
+
+3. Warum dieses Konzept das Briefing erfüllt (Tech & Strategy)
+Privacy by Design (DSGVO-konform): Um Darils Vorlieben zu erkennen, werten wir keine privaten Social-Media-Stories aus. Wir nutzen On-Device Small Language Models (SLMs). Die Daten bleiben auf Darils Handy; an den Server wird lediglich ein abstrakter Intent ("Sucht nach Abkühlung/Eis") gesendet.
+
+Echte Context-Sensing-Layer: Wir verknüpfen Wetterdaten (OpenWeatherMap), Location und – als wichtiges DSV-Asset – simulierte Payone-Transaktionsdichten, um den perfekten Moment zu identifizieren.
+
+Vollständige End-to-End-Lösung: Vom Erkennen der Flaute beim Händler über die dynamische Generierung der UI bis hin zum simulierten Checkout schließt LocalPulse die Lücke zwischen digitaler Intelligenz und lokalem Handel.
