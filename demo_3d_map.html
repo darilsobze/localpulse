@@ -2,331 +2,605 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>LocalPulse – WOW-Effect Demo</title>
-  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>LocalPulse – City Wallet</title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
-  <script src="config.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="/config.js"></script>
 
   <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; background: #111; font-family: 'Segoe UI', sans-serif; }
-    #map { position: absolute; inset: 0; }
+    /* ── Reset & tokens ─────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* ── Context Sensing Card ───────────────────────────────────────────────── */
-    #context-card {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(12, 12, 18, 0.92);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 24px;
-      padding: 24px 28px;
-      color: white;
-      z-index: 20;
-      width: 92%;
-      max-width: 360px;
-      box-shadow: 0 30px 60px rgba(0,0,0,0.6), 0 0 40px rgba(255,138,0,0.08);
-      transition: opacity 0.6s ease, transform 0.6s ease;
+    :root {
+      --orange: #ff8a00;
+      --pink:   #e52e71;
+      --bg:     #0a0a12;
+      --surf:   rgba(16, 16, 26, 0.93);
+      --border: rgba(255,255,255,0.08);
+      --text:   #f0f0f4;
+      --muted:  #888;
+      --grad:   linear-gradient(135deg, #ff8a00, #e52e71);
+      --nav:    70px;
+      --safe:   env(safe-area-inset-bottom, 0px);
     }
-    #context-card.hide {
+
+    html, body { height: 100%; overflow: hidden; background: var(--bg);
+      font-family: -apple-system, 'Segoe UI', system-ui, sans-serif; color: var(--text); }
+
+    /* ── Map ────────────────────────────────────────────────────────────────── */
+    #map { position: fixed; inset: 0; z-index: 0; }
+
+    /* ── Shared glass card ──────────────────────────────────────────────────── */
+    .glass {
+      background: var(--surf);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+    }
+
+    /* ── Gradient helpers ───────────────────────────────────────────────────── */
+    .grad-text {
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── Buttons ────────────────────────────────────────────────────────────── */
+    .btn {
+      display: block; width: 100%; padding: 15px 20px;
+      border: none; border-radius: 30px; font-size: 15px;
+      font-weight: 700; cursor: pointer; transition: transform .15s, opacity .2s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: .4; cursor: default; }
+
+    .btn-primary {
+      background: var(--grad); color: #fff;
+      box-shadow: 0 8px 28px rgba(229,46,113,.35);
+    }
+    .btn-secondary {
+      background: transparent; color: var(--muted);
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: none;
+    }
+
+    /* ── Bottom navigation ──────────────────────────────────────────────────── */
+    #bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      height: calc(var(--nav) + var(--safe));
+      padding-bottom: var(--safe);
+      background: rgba(8,8,16,.97);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-top: 1px solid var(--border);
+      display: flex; align-items: stretch;
+    }
+    .nav-tab {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 4px;
+      background: none; border: none; cursor: pointer;
+      transition: opacity .2s;
+    }
+    .nav-tab:active { opacity: .7; }
+    .nav-icon  { font-size: 22px; transition: transform .2s; }
+    .nav-label {
+      font-size: 10px; font-weight: 700; letter-spacing: .4px;
+      text-transform: uppercase; color: var(--muted); transition: color .2s;
+    }
+    .nav-tab.active .nav-icon  { transform: scale(1.15); }
+    .nav-tab.active .nav-label {
+      background: var(--grad);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       HOME — CONTEXT SENSING CARD
+    ══════════════════════════════════════════════════════════════════════════ */
+    #ctx-card {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, calc(-50% - 36px));
+      width: 92%; max-width: 360px;
+      padding: 22px 22px 18px;
+      z-index: 20;
+      box-shadow: 0 30px 60px rgba(0,0,0,.6), 0 0 40px rgba(255,138,0,.07);
+      transition: opacity .55s ease, transform .55s ease;
+    }
+    #ctx-card.fade-out {
       opacity: 0;
-      transform: translate(-50%, -58%);
+      transform: translate(-50%, calc(-58% - 36px));
       pointer-events: none;
     }
 
     .ctx-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 20px;
-      font-size: 13px;
-      color: #aaa;
-      letter-spacing: 0.5px;
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 18px; font-size: 13px; color: var(--muted); letter-spacing: .4px;
     }
-    .ctx-header-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: #ff8a00;
-      box-shadow: 0 0 8px #ff8a00;
-      animation: dotPulse 1.2s ease infinite;
-      flex-shrink: 0;
+    .ctx-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--orange); box-shadow: 0 0 8px var(--orange);
+      flex-shrink: 0; animation: dotBlink 1.2s ease infinite;
     }
-    @keyframes dotPulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: 0.5; transform: scale(0.7); }
+    @keyframes dotBlink {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:.4; transform:scale(.7); }
     }
 
     .ctx-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      opacity: 0;
-      animation: rowSlideIn 0.4s ease forwards;
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.05);
+      opacity: 0; animation: rowIn .4s ease forwards;
     }
     .ctx-row:last-child { border-bottom: none; }
-    .ctx-row:nth-child(2) { animation-delay: 0.05s; }
-    .ctx-row:nth-child(3) { animation-delay: 0.15s; }
-    .ctx-row:nth-child(4) { animation-delay: 0.25s; }
-    .ctx-row:nth-child(5) { animation-delay: 0.35s; }
-    @keyframes rowSlideIn {
-      from { opacity: 0; transform: translateX(-8px); }
-      to   { opacity: 1; transform: translateX(0); }
+    .ctx-row:nth-child(2) { animation-delay: .05s; }
+    .ctx-row:nth-child(3) { animation-delay: .15s; }
+    .ctx-row:nth-child(4) { animation-delay: .25s; }
+    .ctx-row:nth-child(5) { animation-delay: .35s; }
+    @keyframes rowIn {
+      from { opacity:0; transform:translateX(-8px); }
+      to   { opacity:1; transform:translateX(0); }
     }
 
-    .ctx-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
-    .ctx-label { font-size: 13px; color: #888; flex: 1; }
+    .ctx-ico   { font-size:18px; width:24px; text-align:center; flex-shrink:0; }
+    .ctx-lbl   { font-size:13px; color:var(--muted); flex:1; }
+    .ctx-right { display:flex; align-items:center; gap:6px; }
 
-    .ctx-right {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      min-width: 120px;
-      justify-content: flex-end;
+    .ctx-spin {
+      width:16px; height:16px;
+      border:2px solid rgba(255,138,0,.2); border-top-color:var(--orange);
+      border-radius:50%; animation:spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    .ctx-tick {
+      display:none; width:18px; height:18px;
+      background:var(--grad); border-radius:50%;
+      align-items:center; justify-content:center;
+      font-size:9px; font-weight:900; flex-shrink:0;
+      animation:popIn .35s cubic-bezier(.34,1.56,.64,1) forwards;
+    }
+    @keyframes popIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+
+    .ctx-val {
+      font-size:12px; font-weight:600; color:#eee;
+      text-align:right; opacity:0; transition:opacity .4s;
+      max-width:120px; line-height:1.3;
+    }
+    .ctx-val.show { opacity:1; }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       HOME — OFFER CARD (slides up from bottom)
+    ══════════════════════════════════════════════════════════════════════════ */
+    #offer-card {
+      position: fixed;
+      bottom: calc(var(--nav) + 12px); left: 50%;
+      transform: translate(-50%, calc(100% + 60px));
+      width: 92%; max-width: 400px;
+      padding: 22px;
+      z-index: 20;
+      box-shadow: 0 -4px 40px rgba(0,0,0,.5);
+      transition: transform .7s cubic-bezier(.34,1.2,.64,1);
+    }
+    #offer-card.up   { transform: translateX(-50%); }
+
+    .offer-badge {
+      display:inline-flex; align-items:center; gap:6px;
+      background:rgba(255,138,0,.1); border:1px solid rgba(255,138,0,.22);
+      border-radius:20px; padding:5px 12px;
+      font-size:12px; font-weight:700; color:var(--orange);
+      margin-bottom:12px;
     }
 
-    .ctx-spinner {
-      width: 16px; height: 16px;
-      border: 2px solid rgba(255,138,0,0.2);
-      border-top-color: #ff8a00;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      flex-shrink: 0;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    #offer-title { font-size:21px; font-weight:800; line-height:1.2; margin-bottom:8px; }
+    #offer-desc  { font-size:14px; color:var(--muted); line-height:1.55; margin-bottom:14px; }
 
-    .ctx-check {
-      display: none;
-      width: 18px; height: 18px;
-      background: linear-gradient(135deg, #ff8a00, #e52e71);
-      border-radius: 50%;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      font-weight: 900;
-      flex-shrink: 0;
-      animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    .offer-meta {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:14px;
     }
-    @keyframes popIn {
-      from { transform: scale(0); opacity: 0; }
-      to   { transform: scale(1); opacity: 1; }
-    }
+    .offer-dist  { font-size:13px; color:var(--muted); }
+    .offer-timer { font-size:13px; font-weight:700; color:var(--orange);
+      font-variant-numeric:tabular-nums; }
+    .offer-timer.urgent { color: #f87171; }
 
-    .ctx-value {
-      font-size: 12px;
-      font-weight: 600;
-      color: #eee;
-      text-align: right;
-      opacity: 0;
-      transition: opacity 0.4s ease;
-      max-width: 110px;
-      line-height: 1.3;
+    .signal-pills { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; }
+    .pill {
+      display:inline-flex; align-items:center; gap:4px;
+      padding:4px 10px; border-radius:20px;
+      font-size:11px; font-weight:600; line-height:1;
     }
-    .ctx-value.visible { opacity: 1; }
+    .pill-weather { background:rgba(14,165,233,.14); color:#7dd3fc; border:1px solid rgba(14,165,233,.2); }
+    .pill-demand  { background:rgba(16,185,129,.14); color:#6ee7b7; border:1px solid rgba(16,185,129,.2); }
+    .pill-time    { background:rgba(245,158,11,.14);  color:#fcd34d; border:1px solid rgba(245,158,11,.2); }
+    .pill-event   { background:rgba(167,139,250,.14); color:#c4b5fd; border:1px solid rgba(167,139,250,.2); }
 
-    /* ── Route info card ────────────────────────────────────────────────────── */
-    #route-info {
-      display: none;
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(12, 12, 18, 0.92);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255,138,0,0.35);
-      border-radius: 18px;
-      padding: 14px 28px;
-      color: white;
-      z-index: 10;
-      text-align: center;
-      box-shadow: 0 0 24px rgba(255,138,0,0.15);
-      animation: fadeDown 0.5s ease;
+    .gdpr-note { font-size:10px; color:#4a4a5a; text-align:center; margin-top:10px; line-height:1.4; }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       HOME — ROUTE BANNER + ACTION
+    ══════════════════════════════════════════════════════════════════════════ */
+    #route-banner {
+      position:fixed; top:16px; left:50%;
+      transform:translateX(-50%);
+      padding:14px 28px; text-align:center;
+      z-index:20; display:none; white-space:nowrap;
+      animation:fadeDown .45s ease;
+      box-shadow:0 4px 20px rgba(0,0,0,.4);
     }
     @keyframes fadeDown {
-      from { opacity: 0; transform: translate(-50%, -12px); }
-      to   { opacity: 1; transform: translateX(-50%); }
+      from{opacity:0;transform:translate(-50%,-14px)}
+      to  {opacity:1;transform:translateX(-50%)}
     }
-    #route-info .ri-label { font-size: 10px; color: #666; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
-    #route-info .ri-value {
-      font-size: 26px; font-weight: 800;
-      background: linear-gradient(90deg, #ff8a00, #e52e71);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      line-height: 1;
-    }
-    #route-info .ri-sub { font-size: 12px; color: #777; margin-top: 4px; }
+    .rb-lbl { font-size:10px; color:#555; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:4px; }
+    .rb-val { font-size:26px; font-weight:800; line-height:1; }
+    .rb-sub { font-size:12px; color:#666; margin-top:4px; }
 
-    /* ── GenUI offer widget ─────────────────────────────────────────────────── */
-    #gen-ui-widget {
-      position: absolute;
-      bottom: 40px;
-      left: 50%;
-      transform: translate(-50%, 180%);   /* starts hidden below screen */
-      background: rgba(12, 12, 18, 0.9);
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 22px;
-      border-radius: 22px;
-      color: white;
-      z-index: 10;
-      width: 92%;
-      max-width: 400px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-      transition: transform 0.7s cubic-bezier(0.34, 1.3, 0.64, 1);
-    }
-    #gen-ui-widget.visible { transform: translateX(-50%); }
-    #gen-ui-widget.hide    { transform: translate(-50%, 180%); }
-
-    #gen-ui-widget h2 {
-      margin: 0 0 8px;
-      font-size: 22px;
-      background: linear-gradient(90deg, #ff8a00, #e52e71);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    #gen-ui-widget p { margin: 0 0 18px; color: #bbb; font-size: 14px; line-height: 1.5; }
-
-    .btn {
-      background: linear-gradient(90deg, #ff8a00, #e52e71);
-      color: white;
-      border: none;
-      padding: 14px 24px;
-      border-radius: 30px;
-      font-weight: 700;
-      cursor: pointer;
-      width: 100%;
-      font-size: 16px;
-      box-shadow: 0 4px 20px rgba(229, 46, 113, 0.4);
-      transition: transform 0.15s, opacity 0.2s;
-    }
-    .btn:active   { transform: scale(0.97); }
-    .btn:disabled { opacity: 0.4; cursor: default; }
-
-    .btn-secondary {
-      background: transparent;
-      border: 1px solid rgba(255,255,255,0.15);
-      color: #888;
-      margin-top: 10px;
-      box-shadow: none;
+    #route-action {
+      position:fixed; bottom:calc(var(--nav) + 12px); left:50%;
+      transform:translateX(-50%);
+      width:92%; max-width:400px;
+      display:none; flex-direction:column; gap:10px; z-index:20;
     }
 
-    /* ── WowEffect marker styles ────────────────────────────────────────────── */
+    /* ══════════════════════════════════════════════════════════════════════════
+       QR SCREEN
+    ══════════════════════════════════════════════════════════════════════════ */
+    #screen-qr {
+      position:fixed; inset:0; z-index:60;
+      background:var(--bg);
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      padding:24px 24px calc(24px + var(--nav)); gap:20px;
+      transform:translateY(100%);
+      transition:transform .45s cubic-bezier(.32,.72,0,1);
+    }
+    #screen-qr.open { transform:translateY(0); }
+
+    .qr-hdr { text-align:center; }
+    .qr-hdr h2 { font-size:24px; font-weight:800; margin-bottom:6px; }
+    .qr-hdr p  { font-size:14px; color:var(--muted); }
+
+    #qr-box {
+      width:200px; height:200px;
+      background:#fff; border-radius:18px;
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden;
+      box-shadow:0 0 48px rgba(255,138,0,.3), 0 0 0 6px rgba(255,138,0,.08);
+    }
+
+    .qr-summary {
+      padding:16px 20px; border-radius:18px;
+      text-align:center; width:100%; max-width:320px;
+    }
+    .qr-merchant { font-size:16px; font-weight:700; margin-bottom:4px; }
+    .qr-discount { font-size:30px; font-weight:900; }
+    .qr-addr     { font-size:12px; color:var(--muted); margin-top:4px; }
+    .qr-code-str { font-family:monospace; font-size:10px; color:#444; margin-top:4px; }
+
+    .qr-btns { display:flex; flex-direction:column; gap:10px; width:100%; max-width:320px; }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       SUCCESS SCREEN
+    ══════════════════════════════════════════════════════════════════════════ */
+    #screen-success {
+      position:fixed; inset:0; z-index:70;
+      background:var(--bg);
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      padding:32px 24px calc(32px + var(--nav)); gap:18px;
+      transform:translateY(100%);
+      transition:transform .45s cubic-bezier(.32,.72,0,1);
+    }
+    #screen-success.open { transform:translateY(0); }
+
+    .success-ring {
+      width:84px; height:84px; border-radius:50%;
+      background:var(--grad);
+      display:flex; align-items:center; justify-content:center;
+      font-size:38px;
+      animation:bounceIn .6s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    @keyframes bounceIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+
+    .success-amount {
+      font-size:52px; font-weight:900; line-height:1; text-align:center;
+    }
+    .success-sub { font-size:15px; color:var(--muted); text-align:center; }
+    .success-btns { display:flex; flex-direction:column; gap:10px; width:100%; max-width:320px; }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       PANELS (wallet + merchant) — full-screen overlays
+    ══════════════════════════════════════════════════════════════════════════ */
+    .panel {
+      position:fixed; inset:0 0 var(--nav) 0; z-index:40;
+      background:var(--bg);
+      display:flex; flex-direction:column; overflow:hidden;
+      transform:translateY(100%);
+      transition:transform .4s cubic-bezier(.32,.72,0,1);
+    }
+    .panel.open { transform:translateY(0); }
+
+    .panel-hdr {
+      padding:20px 20px 16px; border-bottom:1px solid var(--border); flex-shrink:0;
+    }
+    .panel-hdr h2 { font-size:18px; font-weight:800; }
+    .panel-hdr p  { font-size:13px; color:var(--muted); margin-top:2px; }
+
+    .panel-body {
+      flex:1; overflow-y:auto; padding:16px 18px;
+      -webkit-overflow-scrolling:touch;
+    }
+    .panel-body::-webkit-scrollbar { display:none; }
+
+    /* ── Section title ──────────────────────────────────────────────────────── */
+    .sec-title {
+      font-size:11px; font-weight:700; color:var(--muted);
+      text-transform:uppercase; letter-spacing:.8px;
+      margin:18px 0 10px;
+    }
+    .sec-title:first-child { margin-top:0; }
+
+    /* ── Skeleton ───────────────────────────────────────────────────────────── */
+    .skel {
+      border-radius:12px; height:16px;
+      background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 75%);
+      background-size:200% 100%;
+      animation:shimmer 1.4s infinite;
+    }
+    @keyframes shimmer { from{background-position:200% 0} to{background-position:-200% 0} }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       WALLET PANEL
+    ══════════════════════════════════════════════════════════════════════════ */
+    .balance-card {
+      border-radius:20px; padding:24px; margin-bottom:4px;
+      background:var(--grad); position:relative; overflow:hidden;
+    }
+    .balance-card::after {
+      content:''; position:absolute; right:-24px; top:-24px;
+      width:130px; height:130px; border-radius:50%;
+      background:rgba(255,255,255,.08);
+    }
+    .bal-lbl    { font-size:11px; font-weight:700; opacity:.8; letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
+    .bal-amount { font-size:46px; font-weight:900; line-height:1; }
+    .bal-sub    { font-size:13px; opacity:.8; margin-top:6px; }
+
+    .stamps-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    .stamp-card {
+      background:rgba(255,255,255,.04); border:1px solid var(--border);
+      border-radius:14px; padding:12px 8px; text-align:center;
+    }
+    .stamp-ico   { font-size:22px; margin-bottom:4px; }
+    .stamp-name  { font-size:10px; color:var(--muted); line-height:1.2; margin-bottom:2px; }
+    .stamp-count { font-size:20px; font-weight:800; }
+
+    .hist-list { display:flex; flex-direction:column; gap:8px; padding-bottom:8px; }
+    .hist-item {
+      display:flex; align-items:center; gap:12px;
+      padding:14px; background:rgba(255,255,255,.04);
+      border:1px solid var(--border); border-radius:16px;
+    }
+    .hist-icon {
+      width:40px; height:40px; border-radius:12px;
+      background:rgba(255,138,0,.1);
+      display:flex; align-items:center; justify-content:center;
+      font-size:20px; flex-shrink:0;
+    }
+    .hist-info { flex:1; min-width:0; }
+    .hist-name { font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hist-date { font-size:11px; color:var(--muted); margin-top:2px; }
+    .hist-cash { font-size:15px; font-weight:700; color:#6ee7b7; flex-shrink:0; }
+
+    .empty-box { text-align:center; padding:40px 20px; color:var(--muted); }
+    .empty-box .e-ico { font-size:38px; margin-bottom:12px; }
+    .empty-box p { font-size:13px; }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       MERCHANT PANEL
+    ══════════════════════════════════════════════════════════════════════════ */
+    .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .stat-card {
+      background:rgba(255,255,255,.04); border:1px solid var(--border);
+      border-radius:16px; padding:16px;
+    }
+    .stat-lbl { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
+    .stat-val { font-size:26px; font-weight:800; line-height:1; }
+    .stat-sub { font-size:11px; color:var(--muted); margin-top:4px; }
+
+    .signal-row {
+      display:flex; align-items:center; gap:12px;
+      padding:16px; background:rgba(255,255,255,.04);
+      border:1px solid var(--border); border-radius:16px;
+    }
+    .sig-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .sig-dot.quiet { background:#6ee7b7; box-shadow:0 0 8px #6ee7b7; animation:glow 1.5s ease infinite; }
+    .sig-dot.busy  { background:#f87171; }
+    @keyframes glow {
+      0%,100%{box-shadow:0 0 0 0 rgba(110,231,183,.5)}
+      70%    {box-shadow:0 0 0 8px rgba(110,231,183,0)}
+    }
+    .sig-txt  { flex:1; }
+    .sig-name { font-size:13px; font-weight:600; }
+    .sig-addr { font-size:11px; color:var(--muted); margin-top:2px; }
+    .sig-pct  { font-size:24px; font-weight:800; }
+
+    .insight {
+      background:rgba(167,139,250,.08); border:1px solid rgba(167,139,250,.18);
+      border-radius:16px; padding:14px 16px;
+    }
+    .insight-lbl { font-size:10px; color:#c4b5fd; text-transform:uppercase; letter-spacing:.8px; font-weight:700; margin-bottom:6px; }
+    .insight-txt { font-size:13px; color:#ddd8f0; line-height:1.55; }
+
+    .slider-grp { margin-bottom:0; }
+    .slider-hdr { display:flex; justify-content:space-between; font-size:13px; margin-bottom:8px; }
+    .slider-hdr span:first-child { color:var(--muted); }
+    .slider-hdr .sv { font-weight:700; }
+    input[type=range] {
+      width:100%; height:4px; -webkit-appearance:none;
+      background:rgba(255,255,255,.1); border-radius:4px; outline:none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance:none; width:22px; height:22px;
+      border-radius:50%; background:var(--grad); cursor:pointer;
+      box-shadow:0 2px 10px rgba(229,46,113,.4);
+    }
+
+    .save-fb { font-size:12px; color:#6ee7b7; text-align:center; min-height:18px; margin-top:4px; }
+
+    /* ── Marker styles (used by WowEffect) ──────────────────────────────────── */
     .lp-user-marker {
-      width: 20px; height: 20px;
-      background: #4dabf7;
-      border: 3px solid white;
-      border-radius: 50%;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-      animation: lp-user-pulse 2s infinite;
+      width:20px; height:20px; background:#4dabf7;
+      border:3px solid #fff; border-radius:50%;
+      box-shadow:0 2px 8px rgba(0,0,0,.4);
+      animation:uPulse 2s infinite;
     }
-    @keyframes lp-user-pulse {
-      0%,100% { box-shadow: 0 0 0 0 rgba(77,171,247,0.5); }
-      70%     { box-shadow: 0 0 0 16px rgba(77,171,247,0); }
+    @keyframes uPulse {
+      0%,100%{box-shadow:0 0 0 0 rgba(77,171,247,.5)}
+      70%    {box-shadow:0 0 0 16px rgba(77,171,247,0)}
     }
-
     .lp-pulse-marker {
-      width: 15px; height: 15px;
-      background: #00ffcc;
-      border-radius: 50%;
-      box-shadow: 0 0 10px #00ffcc;
-      animation: lp-pulse 1.5s infinite;
+      width:15px; height:15px; background:#00ffcc;
+      border-radius:50%; box-shadow:0 0 10px #00ffcc;
+      animation:spPulse 1.5s infinite;
     }
-    @keyframes lp-pulse {
-      0%,100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0,255,204,0.7); }
-      70%     { transform: scale(1);    box-shadow: 0 0 0 20px rgba(0,255,204,0); }
+    @keyframes spPulse {
+      0%,100%{transform:scale(.95);box-shadow:0 0 0 0 rgba(0,255,204,.7)}
+      70%    {transform:scale(1);  box-shadow:0 0 0 20px rgba(0,255,204,0)}
     }
-
     .lp-target-marker {
-      width: 36px; height: 36px;
-      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ff8a00"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>');
-      background-size: cover;
-      filter: drop-shadow(0 0 6px rgba(255,138,0,0.8));
+      width:36px; height:36px;
+      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ff8a00"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>');
+      background-size:cover;
+      filter:drop-shadow(0 0 6px rgba(255,138,0,.8));
     }
   </style>
 </head>
 <body>
 
+  <!-- Always-on map -->
   <div id="map"></div>
 
-  <!-- Context Sensing Card -->
-  <div id="context-card">
+  <!-- ── CONTEXT SENSING CARD ────────────────────────────────────────────── -->
+  <div id="ctx-card" class="glass">
     <div class="ctx-header">
-      <div class="ctx-header-dot"></div>
+      <div class="ctx-dot"></div>
       LocalPulse scannt deinen Kontext…
     </div>
+    <div id="ctx-rows"><!-- filled by JS --></div>
+  </div>
 
-    <div class="ctx-row" id="ctx-time">
-      <span class="ctx-icon">🕐</span>
-      <span class="ctx-label">Uhrzeit</span>
-      <div class="ctx-right">
-        <div class="ctx-spinner"></div>
-        <div class="ctx-check">✓</div>
-        <span class="ctx-value"></span>
-      </div>
+  <!-- ── OFFER CARD ──────────────────────────────────────────────────────── -->
+  <div id="offer-card" class="glass">
+    <div class="offer-badge">
+      <span id="offer-badge-ico">🍦</span>
+      <span id="offer-badge-lbl">Angebot in der Nähe</span>
     </div>
-
-    <div class="ctx-row" id="ctx-location">
-      <span class="ctx-icon">📍</span>
-      <span class="ctx-label">Standort</span>
-      <div class="ctx-right">
-        <div class="ctx-spinner"></div>
-        <div class="ctx-check">✓</div>
-        <span class="ctx-value"></span>
-      </div>
+    <h2 id="offer-title" class="grad-text">Lade Angebot…</h2>
+    <p id="offer-desc">—</p>
+    <div class="offer-meta">
+      <span class="offer-dist">📍 <span id="offer-dist">—</span></span>
+      <span class="offer-timer" id="offer-timer">⏱ 15:00</span>
     </div>
+    <div class="signal-pills" id="offer-pills"></div>
+    <button class="btn btn-primary" id="btn-accept">Nehm ich! &nbsp;→</button>
+    <button class="btn btn-secondary" id="btn-dismiss" style="margin-top:10px">Vielleicht später</button>
+    <p class="gdpr-note" id="gdpr-note">🔒 Dein GPS bleibt auf deinem Gerät.</p>
+  </div>
 
-    <div class="ctx-row" id="ctx-weather">
-      <span class="ctx-icon">🌤️</span>
-      <span class="ctx-label">Wetter</span>
-      <div class="ctx-right">
-        <div class="ctx-spinner"></div>
-        <div class="ctx-check">✓</div>
-        <span class="ctx-value"></span>
-      </div>
+  <!-- ── ROUTE BANNER (top) ─────────────────────────────────────────────── -->
+  <div id="route-banner" class="glass">
+    <div class="rb-lbl">Zu Fuß</div>
+    <div class="rb-val grad-text" id="rb-val">—</div>
+    <div class="rb-sub" id="rb-sub">—</div>
+  </div>
+
+  <!-- ── ROUTE ACTION BUTTONS ───────────────────────────────────────────── -->
+  <div id="route-action">
+    <button class="btn btn-primary"    id="btn-show-qr">QR-Code anzeigen &amp; einlösen</button>
+    <button class="btn btn-secondary"  id="btn-back-home">Zurück zur Übersicht</button>
+  </div>
+
+  <!-- ── QR SCREEN ──────────────────────────────────────────────────────── -->
+  <div id="screen-qr">
+    <div class="qr-hdr">
+      <h2>Jetzt einlösen</h2>
+      <p>QR-Code an der Kasse vorzeigen</p>
     </div>
-
-    <div class="ctx-row" id="ctx-distance">
-      <span class="ctx-icon">📏</span>
-      <span class="ctx-label">Nächstes Angebot</span>
-      <div class="ctx-right">
-        <div class="ctx-spinner"></div>
-        <div class="ctx-check">✓</div>
-        <span class="ctx-value"></span>
-      </div>
+    <div id="qr-box"></div>
+    <div class="qr-summary glass">
+      <div class="qr-merchant" id="qr-merchant"></div>
+      <div class="qr-discount grad-text" id="qr-discount"></div>
+      <div class="qr-addr" id="qr-addr"></div>
+      <div class="qr-code-str" id="qr-code-str"></div>
+    </div>
+    <div class="qr-btns">
+      <button class="btn btn-primary"   id="btn-confirm-qr">Einlösung bestätigen (POS)</button>
+      <button class="btn btn-secondary" id="btn-cancel-qr">Abbrechen</button>
     </div>
   </div>
 
-  <!-- Route info (appears after WOW flight) -->
-  <div id="route-info">
-    <div class="ri-label">Zu Fuß</div>
-    <div class="ri-value" id="route-duration">—</div>
-    <div class="ri-sub" id="route-distance">—</div>
+  <!-- ── SUCCESS SCREEN ────────────────────────────────────────────────── -->
+  <div id="screen-success">
+    <div class="success-ring">🎉</div>
+    <div>
+      <div class="success-amount grad-text" id="suc-amount">+€0.50</div>
+      <div class="success-sub" style="margin-top:6px">in deiner City Wallet</div>
+    </div>
+    <div class="success-sub" id="suc-merchant"></div>
+    <div class="success-btns">
+      <button class="btn btn-primary"   id="btn-suc-home">Zurück zur Übersicht</button>
+      <button class="btn btn-secondary" id="btn-suc-wallet">Wallet anzeigen</button>
+    </div>
   </div>
 
-  <!-- Offer widget (slides up after context checks) -->
-  <div id="gen-ui-widget">
-    <h2 id="offer-title">⚡ Angebot in der Nähe!</h2>
-    <p id="offer-desc">20% auf dein Spaghettieis bei Danny's. Nur für die nächsten 15 Minuten.</p>
-    <button class="btn" id="btn-accept">Angebot annehmen &amp; Route zeigen</button>
-    <button class="btn btn-secondary" id="btn-reset" style="display:none">Zurück zur Übersicht</button>
+  <!-- ── WALLET PANEL ───────────────────────────────────────────────────── -->
+  <div id="panel-wallet" class="panel">
+    <div class="panel-hdr">
+      <h2>City Wallet</h2>
+      <p>Dein Cashback &amp; Stempelkarte</p>
+    </div>
+    <div class="panel-body" id="wallet-body"></div>
   </div>
+
+  <!-- ── MERCHANT PANEL ────────────────────────────────────────────────── -->
+  <div id="panel-merchant" class="panel">
+    <div class="panel-hdr">
+      <h2>Händler-Dashboard</h2>
+      <p id="m-panel-sub">KI-Assistent für lokale Händler</p>
+    </div>
+    <div class="panel-body" id="merchant-body"></div>
+  </div>
+
+  <!-- ── BOTTOM NAVIGATION ─────────────────────────────────────────────── -->
+  <nav id="bottom-nav">
+    <button class="nav-tab active" id="nav-home" onclick="switchTab('home')">
+      <span class="nav-icon">🗺️</span>
+      <span class="nav-label">Entdecken</span>
+    </button>
+    <button class="nav-tab" id="nav-wallet" onclick="switchTab('wallet')">
+      <span class="nav-icon">💰</span>
+      <span class="nav-label">Wallet</span>
+    </button>
+    <button class="nav-tab" id="nav-merchant" onclick="switchTab('merchant')">
+      <span class="nav-icon">🏪</span>
+      <span class="nav-label">Händler</span>
+    </button>
+  </nav>
 
   <script>
     // ─────────────────────────────────────────────────────────────────────────
-    // WowEffect (inlined from src/WowEffect.js for file:// compatibility)
+    // WowEffect — 3D city map + flight + route + social proof
     // ─────────────────────────────────────────────────────────────────────────
     class WowEffect {
       constructor({ container, mapboxToken, startLngLat, onReady, onFlightComplete }) {
         mapboxgl.accessToken = mapboxToken;
-        this._startLngLat = startLngLat;
+        this._start = startLngLat;
         this._onFlightComplete = onFlightComplete;
         this._markers = [];
         this._userMarker = null;
@@ -334,26 +608,17 @@
         this._map = new mapboxgl.Map({
           container,
           style: 'mapbox://styles/mapbox/satellite-streets-v12',
-          center: startLngLat,
-          zoom: 14,
-          pitch: 0,
-          bearing: 0,
-          antialias: true,
+          center: startLngLat, zoom: 14, pitch: 0, bearing: 0, antialias: true,
         });
-
-        this._map.on('style.load', () => {
-          this._add3DBuildings();
-          onReady && onReady();
-        });
+        this._map.on('style.load', () => { this._add3D(); onReady && onReady(); });
       }
 
       updateUserLocation(lngLat) {
-        this._startLngLat = lngLat;
+        this._start = lngLat;
         if (this._userMarker) {
           this._userMarker.setLngLat(lngLat);
         } else {
-          const el = document.createElement('div');
-          el.className = 'lp-user-marker';
+          const el = Object.assign(document.createElement('div'), { className: 'lp-user-marker' });
           this._userMarker = new mapboxgl.Marker(el).setLngLat(lngLat).addTo(this._map);
         }
         this._map.flyTo({ center: lngLat, zoom: 15, duration: 1200 });
@@ -361,25 +626,21 @@
 
       trigger({ targetLngLat, socialProofCoords = [], flightDuration = 4000 }) {
         this._clearOfferMarkers();
-        this._map.flyTo({
-          center: targetLngLat, zoom: 17.5,
-          pitch: 65, bearing: -20,
-          duration: flightDuration, essential: true,
-        });
+        this._map.flyTo({ center: targetLngLat, zoom: 17.5, pitch: 65, bearing: -20,
+          duration: flightDuration, essential: true });
         setTimeout(() => {
           this._addTargetMarker(targetLngLat);
-          this._addSocialProofMarkers(socialProofCoords);
+          socialProofCoords.forEach((c, i) =>
+            setTimeout(() => this._addSocialMarker(c), i * 500));
           this._onFlightComplete && this._onFlightComplete();
         }, flightDuration);
       }
 
       async showRoute({ from, to }) {
-        const url =
-          `https://api.mapbox.com/directions/v5/mapbox/walking/` +
-          `${from[0]},${from[1]};${to[0]},${to[1]}` +
-          `?geometries=geojson&overview=full&access_token=${mapboxgl.accessToken}`;
-        const res  = await fetch(url);
-        const data = await res.json();
+        const url = `https://api.mapbox.com/directions/v5/mapbox/walking/`
+          + `${from[0]},${from[1]};${to[0]},${to[1]}`
+          + `?geometries=geojson&overview=full&access_token=${mapboxgl.accessToken}`;
+        const data  = await fetch(url).then(r => r.json());
         const route = data.routes[0];
         this._drawRoute(route.geometry);
         this._fitRoute(route.geometry.coordinates);
@@ -389,21 +650,14 @@
       reset() {
         this._clearOfferMarkers();
         this._removeRoute();
-        this._map.flyTo({ center: this._startLngLat, zoom: 15, pitch: 0, bearing: 0, duration: 2000 });
+        this._map.flyTo({ center: this._start, zoom: 15, pitch: 0, bearing: 0, duration: 2000 });
       }
 
-      destroy() {
-        this._clearOfferMarkers();
-        if (this._userMarker) this._userMarker.remove();
-        this._removeRoute();
-        this._map.remove();
-      }
-
-      _add3DBuildings() {
-        const layers     = this._map.getStyle().layers;
-        const labelLayer = layers.find((l) => l.type === 'symbol' && l.layout['text-field']);
+      _add3D() {
+        const layers = this._map.getStyle().layers;
+        const lbl    = layers.find(l => l.type === 'symbol' && l.layout['text-field']);
         this._map.addLayer({
-          id: 'lp-3d-buildings', source: 'composite', 'source-layer': 'building',
+          id: 'lp-3d', source: 'composite', 'source-layer': 'building',
           filter: ['==', 'extrude', 'true'], type: 'fill-extrusion', minzoom: 15,
           paint: {
             'fill-extrusion-color': '#c4a882',
@@ -411,269 +665,622 @@
             'fill-extrusion-base':   ['interpolate',['linear'],['zoom'],15,0,15.05,['get','min_height']],
             'fill-extrusion-opacity': 0.75,
           },
-        }, labelLayer && labelLayer.id);
+        }, lbl && lbl.id);
       }
 
-      _drawRoute(geometry) {
-        if (this._map.getSource('lp-route')) {
-          this._map.getSource('lp-route').setData(geometry); return;
-        }
-        this._map.addSource('lp-route', { type: 'geojson', data: geometry });
+      _drawRoute(geom) {
+        if (this._map.getSource('lp-route')) { this._map.getSource('lp-route').setData(geom); return; }
+        this._map.addSource('lp-route', { type: 'geojson', data: geom });
         this._map.addLayer({ id:'lp-route-glow', type:'line', source:'lp-route',
-          paint:{ 'line-color':'#ff8a00','line-width':12,'line-opacity':0.25,'line-blur':6 } });
+          paint:{ 'line-color':'#ff8a00','line-width':12,'line-opacity':.22,'line-blur':6 } });
         this._map.addLayer({ id:'lp-route-line', type:'line', source:'lp-route',
           layout:{ 'line-join':'round','line-cap':'round' },
-          paint:{ 'line-color':'#ff8a00','line-width':4,'line-opacity':0.95 } });
+          paint:{ 'line-color':'#ff8a00','line-width':4,'line-opacity':.95 } });
       }
 
       _fitRoute(coords) {
-        const bounds = coords.reduce((b,c) => b.extend(c),
-          new mapboxgl.LngLatBounds(coords[0], coords[0]));
-        this._map.fitBounds(bounds, { padding:80, pitch:45, bearing:0, duration:2000 });
+        const b = coords.reduce((b,c) => b.extend(c), new mapboxgl.LngLatBounds(coords[0], coords[0]));
+        this._map.fitBounds(b, { padding:80, pitch:45, bearing:0, duration:2000 });
       }
 
       _removeRoute() {
-        if (this._map.getLayer('lp-route-glow')) this._map.removeLayer('lp-route-glow');
-        if (this._map.getLayer('lp-route-line')) this._map.removeLayer('lp-route-line');
-        if (this._map.getSource('lp-route'))     this._map.removeSource('lp-route');
+        ['lp-route-glow','lp-route-line'].forEach(id => { if (this._map.getLayer(id)) this._map.removeLayer(id); });
+        if (this._map.getSource('lp-route')) this._map.removeSource('lp-route');
       }
 
       _addTargetMarker(lngLat) {
-        const el = document.createElement('div');
-        el.className = 'lp-target-marker';
+        const el = Object.assign(document.createElement('div'), { className: 'lp-target-marker' });
         this._markers.push(new mapboxgl.Marker(el).setLngLat(lngLat).addTo(this._map));
       }
 
-      _addSocialProofMarkers(coords) {
-        coords.forEach((coord, i) => {
-          setTimeout(() => {
-            const el = document.createElement('div');
-            el.className = 'lp-pulse-marker';
-            this._markers.push(new mapboxgl.Marker(el).setLngLat(coord).addTo(this._map));
-          }, i * 500);
-        });
+      _addSocialMarker(coord) {
+        const el = Object.assign(document.createElement('div'), { className: 'lp-pulse-marker' });
+        this._markers.push(new mapboxgl.Marker(el).setLngLat(coord).addTo(this._map));
       }
 
-      _clearOfferMarkers() {
-        this._markers.forEach((m) => m.remove());
-        this._markers = [];
-      }
+      _clearOfferMarkers() { this._markers.forEach(m => m.remove()); this._markers = []; }
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Constants & state
+    // ─────────────────────────────────────────────────────────────────────────
+    const TOKEN      = (typeof CONFIG !== 'undefined' && CONFIG.MAPBOX_TOKEN) || '';
+    const FALLBACK   = [8.6512, 49.8728];
+    const USER_ID    = 'user_demo';
+    const DEMO_MID   = 'm_1';
+
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+    let userLngLat   = null;
+    let backendOffer = null;
+    let weatherTemp  = 20;
+    let weatherCode  = 0;
+    let offerCode    = null;
+    let countdown    = null;  // interval id
+    let cdSecs       = 900;
 
     // ─────────────────────────────────────────────────────────────────────────
     // Helpers
     // ─────────────────────────────────────────────────────────────────────────
-    const MAPBOX_TOKEN    = typeof CONFIG !== 'undefined' ? CONFIG.MAPBOX_TOKEN : 'DEIN_MAPBOX_TOKEN_HIER';
-    const FALLBACK_LNGLAT = [8.6512, 49.8728];
+    const fmtDist = m => m >= 1000 ? (m/1000).toFixed(1)+' km' : Math.round(m)+' m';
+    const fmtMins = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+    const catIcon = cat => ({ ice_cream:'🍦', coffee:'☕', food:'🥗', bakery:'🥐',
+      smoothie:'🥤', beer:'🍺' }[cat] || '🏪');
 
-    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-    function weatherInfo(code) {
-      if (code === 0)  return { emoji: '☀️',  label: 'Sonnig' };
-      if (code <= 3)   return { emoji: '⛅',  label: 'Bewölkt' };
-      if (code <= 48)  return { emoji: '🌫️', label: 'Neblig' };
-      if (code <= 55)  return { emoji: '🌦️', label: 'Nieselregen' };
-      if (code <= 67)  return { emoji: '🌧️', label: 'Regen' };
-      if (code <= 77)  return { emoji: '❄️',  label: 'Schnee' };
-      if (code <= 82)  return { emoji: '🌦️', label: 'Schauer' };
-      return                 { emoji: '⛈️',  label: 'Gewitter' };
+    function wmoEmoji(c) {
+      if (c===0)      return '☀️';
+      if (c<=3)       return '⛅';
+      if (c<=48)      return '🌫️';
+      if (c<=55)      return '🌦️';
+      if (c<=67)      return '🌧️';
+      if (c<=77)      return '❄️';
+      if (c<=82)      return '🌦️';
+      return '⛈️';
     }
 
-    function haversine([lng1, lat1], [lng2, lat2]) {
-      const R = 6371000;
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLng = (lng2 - lng1) * Math.PI / 180;
-      const a = Math.sin(dLat/2)**2
-              + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    }
-
-    function resolveRow(id, text) {
-      const row     = document.getElementById(id);
-      const spinner = row.querySelector('.ctx-spinner');
-      const check   = row.querySelector('.ctx-check');
-      const value   = row.querySelector('.ctx-value');
-      spinner.style.display = 'none';
-      check.style.display   = 'flex';
-      value.textContent     = text;
-      // Trigger reflow so transition fires
-      value.offsetHeight;
-      value.classList.add('visible');
-    }
-
-    function buildTarget(lngLat) {
-      const [lng, lat] = lngLat;
-      return [lng + 0.003, lat + 0.0018];
+    function genOfferCode(mid) {
+      const r = Math.random().toString(36).slice(2,7).toUpperCase();
+      return `LP-${(mid||'X').toUpperCase()}-${Date.now()}-${r}`;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // WowEffect init
     // ─────────────────────────────────────────────────────────────────────────
-    let userLngLat  = null;
-    let backendOffer = null;
-    let weatherTemp  = 20;
-    let weatherCode  = 0;
-
     const wow = new WowEffect({
       container: 'map',
-      mapboxToken: MAPBOX_TOKEN,
-      startLngLat: FALLBACK_LNGLAT,
+      mapboxToken: TOKEN,
+      startLngLat: FALLBACK,
       onFlightComplete: async () => {
-        const from = userLngLat || FALLBACK_LNGLAT;
-        const to   = backendOffer?.targetLngLat ?? buildTarget(from);
+        const from = userLngLat || FALLBACK;
+        const to   = backendOffer?.targetLngLat ?? [from[0]+.003, from[1]+.0018];
         try {
           const { distance, duration } = await wow.showRoute({ from, to });
-          const mins = Math.ceil(duration / 60);
-          const dist = distance >= 1000
-            ? (distance / 1000).toFixed(1) + ' km'
-            : Math.round(distance) + ' m';
-          document.getElementById('route-duration').textContent = mins + ' Min.';
-          document.getElementById('route-distance').textContent = dist + ' · zu Fuß';
-          document.getElementById('route-info').style.display = 'block';
-        } catch(e) { console.warn('Route error:', e); }
-        document.getElementById('btn-reset').style.display = 'block';
+          document.getElementById('rb-val').textContent = Math.ceil(duration/60) + ' Min.';
+          document.getElementById('rb-sub').textContent = fmtDist(distance) + ' · zu Fuß';
+          document.getElementById('route-banner').style.display = 'block';
+        } catch(e) { console.warn('Route err:', e); }
+        document.getElementById('route-action').style.display = 'flex';
       },
     });
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Context Sensing – all checks run in parallel, UI resolves as data arrives
+    // Context Sensing Card — build rows
+    // ─────────────────────────────────────────────────────────────────────────
+    const CTX_ROWS = [
+      { id:'row-time',     ico:'🕐', lbl:'Uhrzeit' },
+      { id:'row-location', ico:'📍', lbl:'Standort' },
+      { id:'row-weather',  ico:'🌤️', lbl:'Wetter' },
+      { id:'row-demand',   ico:'🏪', lbl:'Payone-Signal' },
+    ];
+
+    function buildCtxRows() {
+      document.getElementById('ctx-rows').innerHTML = CTX_ROWS.map(r => `
+        <div class="ctx-row" id="${r.id}">
+          <span class="ctx-ico">${r.ico}</span>
+          <span class="ctx-lbl">${r.lbl}</span>
+          <div class="ctx-right">
+            <div class="ctx-spin"></div>
+            <div class="ctx-tick">✓</div>
+            <span class="ctx-val"></span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function resolveRow(id, text) {
+      const row = document.getElementById(id);
+      if (!row) return;
+      row.querySelector('.ctx-spin').style.display = 'none';
+      row.querySelector('.ctx-tick').style.display = 'flex';
+      const v = row.querySelector('.ctx-val');
+      v.textContent = text;
+      v.offsetHeight;
+      v.classList.add('show');
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Context checks
     // ─────────────────────────────────────────────────────────────────────────
     async function checkTime() {
-      await sleep(400);
-      const now  = new Date();
-      const time = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr';
-      resolveRow('ctx-time', time);
+      await sleep(380);
+      const t = new Date().toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' }) + ' Uhr';
+      resolveRow('row-time', t);
     }
 
     async function checkLocation() {
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         if (!navigator.geolocation) {
-          resolveRow('ctx-location', 'Darmstadt (Demo)');
-          return resolve(FALLBACK_LNGLAT);
+          resolveRow('row-location', 'Darmstadt (Demo)');
+          return resolve(FALLBACK);
         }
         navigator.geolocation.getCurrentPosition(
-          async (pos) => {
-            const lngLat = [pos.coords.longitude, pos.coords.latitude];
-            // Reverse geocode → city name
+          async pos => {
+            const ll = [pos.coords.longitude, pos.coords.latitude];
             try {
-              const url  = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lngLat[0]},${lngLat[1]}.json?types=locality,place&limit=1&access_token=${MAPBOX_TOKEN}`;
-              const res  = await fetch(url);
-              const data = await res.json();
-              const city = data.features[0]?.text ?? 'Unbekannt';
-              resolveRow('ctx-location', city);
-            } catch {
-              resolveRow('ctx-location', 'Gefunden');
-            }
-            resolve(lngLat);
+              const u = `https://api.mapbox.com/geocoding/v5/mapbox.places/${ll[0]},${ll[1]}.json?types=locality,place&limit=1&access_token=${TOKEN}`;
+              const d = await fetch(u).then(r => r.json());
+              resolveRow('row-location', d.features[0]?.text ?? 'Gefunden');
+            } catch { resolveRow('row-location', 'Gefunden'); }
+            resolve(ll);
           },
-          () => {
-            resolveRow('ctx-location', 'Darmstadt (Demo)');
-            resolve(FALLBACK_LNGLAT);
-          },
+          () => { resolveRow('row-location', 'Darmstadt (Demo)'); resolve(FALLBACK); },
           { enableHighAccuracy: true, timeout: 8000 }
         );
       });
     }
 
-    async function checkWeather(lngLat) {
-      const [lng, lat] = lngLat;
+    async function checkWeather(ll) {
       try {
-        const url  = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weather_code`;
-        const res  = await fetch(url);
-        const data = await res.json();
-        weatherTemp = Math.round(data.current.temperature_2m);
-        weatherCode = data.current.weather_code;
-        const { emoji, label } = weatherInfo(weatherCode);
-        resolveRow('ctx-weather', `${weatherTemp}°C · ${emoji} ${label}`);
-      } catch {
-        resolveRow('ctx-weather', 'Nicht verfügbar');
-      }
+        const d = await fetch(`/api/weather?lat=${ll[1]}&lng=${ll[0]}`).then(r => r.json());
+        weatherTemp = d.temp;
+        weatherCode = d.raw_code;
+        resolveRow('row-weather', `${weatherTemp}°C ${wmoEmoji(weatherCode)}`);
+      } catch { resolveRow('row-weather', 'Nicht verfügbar'); }
     }
 
-    async function fetchOffer(lngLat) {
+    async function fetchOffer(ll) {
       try {
         const res = await fetch('/api/offer', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            user_lng:     lngLat[0],
-            user_lat:     lngLat[1],
-            temperature:  weatherTemp,
-            weather_code: weatherCode,
-            radius_m:     50000
-          })
+            user_lng: ll[0], user_lat: ll[1],
+            temperature: weatherTemp, weather_code: weatherCode,
+            radius_m: 50000,
+          }),
         });
         if (!res.ok) throw new Error('HTTP ' + res.status);
-        return await res.json();
-      } catch (e) {
-        console.warn('[LocalPulse] Backend nicht erreichbar:', e);
+        const data = await res.json();
+        const ds = data.context_state?.signals?.find(s => s.type === 'demand');
+        resolveRow('row-demand', ds ? ds.label : 'Signal empfangen');
+        return data;
+      } catch(e) {
+        console.warn('[LP] offer err:', e);
+        resolveRow('row-demand', 'Nicht verfügbar');
         return null;
       }
     }
 
-    async function checkDistance(lngLat) {
-      await sleep(300); // slight visual delay
-      const target   = buildTarget(lngLat);
-      const dist     = Math.round(haversine(lngLat, target));
-      const distText = dist >= 1000 ? (dist/1000).toFixed(1) + ' km' : dist + ' m';
-      resolveRow('ctx-distance', `~${distText} entfernt`);
+    async function runContextChecks() {
+      buildCtxRows();
+      document.getElementById('ctx-card').classList.remove('fade-out');
+
+      const [ll] = await Promise.all([checkLocation(), checkTime()]);
+      userLngLat = ll;
+      wow.updateUserLocation(ll);
+
+      await checkWeather(ll);
+      backendOffer = await fetchOffer(ll);
+
+      await sleep(900);
+      document.getElementById('ctx-card').classList.add('fade-out');
+      await sleep(450);
+      showOfferCard(backendOffer);
     }
 
-    async function runContextChecks() {
-      const [lngLat] = await Promise.all([checkLocation(), checkTime()]);
-      userLngLat = lngLat;
-      wow.updateUserLocation(lngLat);
+    // ─────────────────────────────────────────────────────────────────────────
+    // Offer Card
+    // ─────────────────────────────────────────────────────────────────────────
+    function showOfferCard(offer) {
+      const hasOffer = offer?.status === 'success';
 
-      // Wetter holen (setzt weatherTemp / weatherCode)
-      await Promise.all([checkWeather(lngLat), checkDistance(lngLat)]);
+      if (hasOffer) {
+        const ico = catIcon(offer.category);
+        document.getElementById('offer-badge-ico').textContent = ico;
+        document.getElementById('offer-badge-lbl').textContent = offer.merchant_name;
+        document.getElementById('offer-title').textContent     = offer.offer.title;
+        document.getElementById('offer-desc').textContent      = offer.offer.description;
+        document.getElementById('offer-dist').textContent      = fmtDist(offer.distance_m) + ' entfernt';
+        document.getElementById('gdpr-note').textContent       = '🔒 ' + (offer.context_state?.gdpr_note ?? 'Dein GPS bleibt auf deinem Gerät.');
+        document.getElementById('btn-accept').disabled = false;
 
-      // Backend mit echtem Wetter aufrufen
-      backendOffer = await fetchOffer(lngLat);
+        const pills = document.getElementById('offer-pills');
+        pills.innerHTML = (offer.context_state?.signals || []).map(s =>
+          `<span class="pill pill-${s.type}">${s.icon} ${s.label}</span>`
+        ).join('');
 
-      if (backendOffer?.status === 'success') {
-        document.getElementById('offer-title').textContent = backendOffer.offer.title;
-        document.getElementById('offer-desc').textContent  = backendOffer.offer.description;
-        const dist = backendOffer.distance_m;
-        const distText = dist >= 1000 ? (dist/1000).toFixed(1) + ' km' : dist + ' m';
-        document.querySelector('#ctx-distance .ctx-value').textContent = `~${distText} entfernt`;
+        cdSecs = offer.expires_in_sec ?? 900;
+        startCountdown();
       } else {
-        document.getElementById('offer-title').textContent = 'Keine Angebote in der Nähe';
-        document.getElementById('offer-desc').textContent  = 'Gerade haben lokale Händler keine aktiven Deals für deinen Standort.';
+        document.getElementById('offer-badge-ico').textContent = '😴';
+        document.getElementById('offer-badge-lbl').textContent = 'Keine Angebote';
+        document.getElementById('offer-title').textContent     = 'Stadt ist beschäftigt';
+        document.getElementById('offer-desc').textContent      = 'Gerade haben lokale Händler keine aktiven Deals. Schau später nochmal!';
+        document.getElementById('offer-dist').textContent      = '—';
+        document.getElementById('offer-timer').textContent     = '';
+        document.getElementById('offer-pills').innerHTML       = '';
         document.getElementById('btn-accept').disabled = true;
       }
 
-      await sleep(1400);
-      document.getElementById('context-card').classList.add('hide');
-      await sleep(400);
-      document.getElementById('gen-ui-widget').classList.add('visible');
+      document.getElementById('offer-card').classList.add('up');
     }
 
-    runContextChecks();
+    function startCountdown() {
+      if (countdown) clearInterval(countdown);
+      const el = document.getElementById('offer-timer');
+      el.textContent = '⏱ ' + fmtMins(cdSecs);
+      countdown = setInterval(() => {
+        cdSecs--;
+        el.textContent = '⏱ ' + fmtMins(Math.max(0, cdSecs));
+        if (cdSecs <= 60) el.classList.add('urgent');
+        if (cdSecs <= 0) {
+          clearInterval(countdown);
+          onExpired();
+        }
+      }, 1000);
+    }
+
+    function onExpired() {
+      if (backendOffer?.merchant_id) {
+        fetch('/api/dismiss', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: USER_ID, merchant_id: backendOffer.merchant_id, reason: 'expired' }),
+        }).catch(() => {});
+      }
+      resetToScan();
+    }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Button wiring
+    // Accept → WOW trigger
     // ─────────────────────────────────────────────────────────────────────────
     document.getElementById('btn-accept').addEventListener('click', () => {
-      document.getElementById('gen-ui-widget').classList.remove('visible');
-      document.getElementById('gen-ui-widget').classList.add('hide');
-      const from   = userLngLat || FALLBACK_LNGLAT;
-      const target = backendOffer?.targetLngLat ?? buildTarget(from);
+      if (countdown) clearInterval(countdown);
+      document.getElementById('offer-card').classList.remove('up');
+
+      const from   = userLngLat || FALLBACK;
+      const target = backendOffer?.targetLngLat ?? [from[0]+.003, from[1]+.0018];
       const social = backendOffer?.social_proof_coords ?? [
-        [from[0] + 0.0025, from[1] + 0.0013],
-        [from[0] + 0.0035, from[1] + 0.0022],
-        [from[0] + 0.0028, from[1] + 0.0008],
+        [from[0]+.0025, from[1]+.0013],
+        [from[0]+.0035, from[1]+.0022],
+        [from[0]+.0028, from[1]+.0008],
       ];
       wow.trigger({ targetLngLat: target, socialProofCoords: social });
     });
 
-    document.getElementById('btn-reset').addEventListener('click', () => {
-      document.getElementById('gen-ui-widget').classList.add('visible');
-      document.getElementById('gen-ui-widget').classList.remove('hide');
-      document.getElementById('btn-reset').style.display = 'none';
-      document.getElementById('route-info').style.display = 'none';
-      wow.reset();
+    // Dismiss
+    document.getElementById('btn-dismiss').addEventListener('click', () => {
+      if (countdown) clearInterval(countdown);
+      if (backendOffer?.merchant_id) {
+        fetch('/api/dismiss', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: USER_ID, merchant_id: backendOffer.merchant_id, reason: 'user_dismissed' }),
+        }).catch(() => {});
+      }
+      resetToScan();
     });
-  </script>
 
+    // QR button (after route)
+    document.getElementById('btn-show-qr').addEventListener('click', openQR);
+
+    // Back from route
+    document.getElementById('btn-back-home').addEventListener('click', () => {
+      document.getElementById('route-banner').style.display = 'none';
+      document.getElementById('route-action').style.display = 'none';
+      wow.reset();
+      resetToScan();
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // QR Screen
+    // ─────────────────────────────────────────────────────────────────────────
+    function openQR() {
+      offerCode = genOfferCode(backendOffer?.merchant_id);
+
+      document.getElementById('qr-merchant').textContent = backendOffer?.merchant_name ?? 'Händler';
+      document.getElementById('qr-discount').textContent = `${backendOffer?.offer?.discount_pct ?? 20}% Rabatt`;
+      document.getElementById('qr-addr').textContent     = backendOffer?.merchant_address ?? '';
+      document.getElementById('qr-code-str').textContent = offerCode;
+
+      const box = document.getElementById('qr-box');
+      box.innerHTML = '';
+      if (typeof QRCode !== 'undefined') {
+        new QRCode(box, {
+          text: offerCode, width: 180, height: 180,
+          colorDark: '#111111', colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M,
+        });
+      } else {
+        box.innerHTML = `<span style="font-family:monospace;font-size:10px;padding:8px;color:#333">${offerCode}</span>`;
+      }
+
+      document.getElementById('screen-qr').classList.add('open');
+    }
+
+    document.getElementById('btn-confirm-qr').addEventListener('click', confirmRedeem);
+
+    document.getElementById('btn-cancel-qr').addEventListener('click', () => {
+      document.getElementById('screen-qr').classList.remove('open');
+    });
+
+    async function confirmRedeem() {
+      const offer = backendOffer;
+      if (!offer) return;
+      const cashback = offer.offer.cashback_eur ?? 0.50;
+      try {
+        await fetch('/api/redeem', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id:       USER_ID,
+            offer_code:    offerCode,
+            merchant_id:   offer.merchant_id,
+            merchant_name: offer.merchant_name,
+            discount_pct:  offer.offer.discount_pct,
+            cashback_eur:  cashback,
+          }),
+        });
+      } catch(e) { console.warn('Redeem err:', e); }
+
+      document.getElementById('suc-amount').textContent   = `+€${cashback.toFixed(2)}`;
+      document.getElementById('suc-merchant').textContent = `bei ${offer.merchant_name}`;
+
+      document.getElementById('screen-qr').classList.remove('open');
+      await sleep(60);
+      document.getElementById('screen-success').classList.add('open');
+    }
+
+    // Success buttons
+    document.getElementById('btn-suc-home').addEventListener('click', () => {
+      document.getElementById('screen-success').classList.remove('open');
+      document.getElementById('route-banner').style.display = 'none';
+      document.getElementById('route-action').style.display = 'none';
+      wow.reset();
+      resetToScan();
+    });
+
+    document.getElementById('btn-suc-wallet').addEventListener('click', () => {
+      document.getElementById('screen-success').classList.remove('open');
+      switchTab('wallet');
+    });
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Reset to scan
+    // ─────────────────────────────────────────────────────────────────────────
+    function resetToScan() {
+      if (countdown) clearInterval(countdown);
+      backendOffer = null; offerCode = null;
+      weatherTemp = 20; weatherCode = 0;
+      document.getElementById('offer-card').classList.remove('up');
+      setTimeout(runContextChecks, 300);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Tab switching
+    // ─────────────────────────────────────────────────────────────────────────
+    function switchTab(tab) {
+      ['home','wallet','merchant'].forEach(t => {
+        document.getElementById('nav-' + t).classList.toggle('active', t === tab);
+      });
+      document.getElementById('panel-wallet').classList.toggle('open',    tab === 'wallet');
+      document.getElementById('panel-merchant').classList.toggle('open',  tab === 'merchant');
+
+      if (tab === 'wallet')   loadWallet();
+      if (tab === 'merchant') loadMerchant();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Wallet Panel
+    // ─────────────────────────────────────────────────────────────────────────
+    async function loadWallet() {
+      const body = document.getElementById('wallet-body');
+      body.innerHTML = `
+        <div class="skel" style="height:110px;border-radius:20px;margin-bottom:8px"></div>
+        <div class="skel" style="height:14px;width:40%;margin-bottom:16px"></div>
+        <div class="skel" style="height:80px;margin-bottom:8px"></div>
+        <div class="skel" style="height:80px"></div>
+      `;
+      try {
+        const [w, h] = await Promise.all([
+          fetch(`/api/wallet/${USER_ID}`).then(r => r.json()),
+          fetch(`/api/wallet/${USER_ID}/history`).then(r => r.json()),
+        ]);
+        body.innerHTML = renderWallet(w, h);
+      } catch {
+        body.innerHTML = '<div class="empty-box"><div class="e-ico">⚠️</div><p>Konnte Wallet nicht laden.</p></div>';
+      }
+    }
+
+    function renderWallet(w, history) {
+      const stamps = Object.entries(w.stamps ?? {});
+      const stampsHtml = stamps.length ? `
+        <div class="stamps-grid">
+          ${stamps.map(([name, n]) => `
+            <div class="stamp-card">
+              <div class="stamp-ico">🏪</div>
+              <div class="stamp-name">${name}</div>
+              <div class="stamp-count">${n}×</div>
+            </div>
+          `).join('')}
+        </div>
+      ` : `<div class="empty-box"><div class="e-ico">🎫</div><p>Noch keine Stempel.</p></div>`;
+
+      const histHtml = history.length ? `
+        <div class="hist-list">
+          ${history.map(h => `
+            <div class="hist-item">
+              <div class="hist-icon">🏪</div>
+              <div class="hist-info">
+                <div class="hist-name">${h.merchant_name}</div>
+                <div class="hist-date">${new Date(h.created_at).toLocaleDateString('de-DE')} &middot; ${h.discount_pct}% Rabatt</div>
+              </div>
+              <div class="hist-cash">+€${h.cashback_eur.toFixed(2)}</div>
+            </div>
+          `).join('')}
+        </div>
+      ` : `<div class="empty-box"><div class="e-ico">📋</div><p>Noch keine Einlösungen.</p></div>`;
+
+      return `
+        <div class="balance-card">
+          <div class="bal-lbl">City Wallet Balance</div>
+          <div class="bal-amount">€${w.balance_eur.toFixed(2)}</div>
+          <div class="bal-sub">Gesamtes Cashback · ${USER_ID}</div>
+        </div>
+        <div class="sec-title">Stempelkarten</div>
+        ${stampsHtml}
+        <div class="sec-title">Letzte Einlösungen</div>
+        ${histHtml}
+      `;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Merchant Panel
+    // ─────────────────────────────────────────────────────────────────────────
+    async function loadMerchant() {
+      const body = document.getElementById('merchant-body');
+      body.innerHTML = `
+        <div class="skel" style="height:70px;margin-bottom:8px"></div>
+        <div class="skel" style="height:120px;margin-bottom:8px"></div>
+        <div class="skel" style="height:160px"></div>
+      `;
+      try {
+        const [stats, settings] = await Promise.all([
+          fetch('/api/merchant/stats').then(r => r.json()),
+          fetch(`/api/merchant/${DEMO_MID}/settings`).then(r => r.json()),
+        ]);
+        document.getElementById('m-panel-sub').textContent = stats.merchant ?? 'Danny\'s Eisdiele';
+        body.innerHTML = renderMerchant(stats, settings);
+        wireSliders(settings);
+      } catch {
+        body.innerHTML = '<div class="empty-box"><div class="e-ico">⚠️</div><p>Konnte Dashboard nicht laden.</p></div>';
+      }
+    }
+
+    function renderMerchant(s, cfg) {
+      const quiet = s.is_quiet;
+      const insight = s.accept_rate_pct >= 60
+        ? `Stark! ${s.accept_rate_pct}% Akzeptanzrate. Deine Flauten-Strategie funktioniert.`
+        : s.offers_accepted === 0
+        ? 'Noch keine Einlösungen. Sende einen Test-Push, um dein erstes Angebot zu aktivieren!'
+        : `${s.accept_rate_pct}% Akzeptanzrate. Tipp: Ein höherer Rabatt in Stosszeiten könnte die Conversion verbessern.`;
+
+      return `
+        <div class="sec-title">Live Payone-Signal</div>
+        <div class="signal-row glass" style="margin-bottom:16px">
+          <div class="sig-dot ${quiet ? 'quiet' : 'busy'}"></div>
+          <div class="sig-txt">
+            <div class="sig-name">${quiet ? 'Flaute — KI kann aktivieren' : 'Normaler Betrieb'}</div>
+            <div class="sig-addr">${s.location ?? ''}</div>
+          </div>
+          <div class="sig-pct grad-text">${Math.round(s.quiet_score * 100)}%</div>
+        </div>
+
+        <div class="sec-title">Performance</div>
+        <div class="stat-grid" style="margin-bottom:16px">
+          <div class="stat-card">
+            <div class="stat-lbl">Akzeptiert</div>
+            <div class="stat-val">${s.offers_accepted}</div>
+            <div class="stat-sub">Einlösungen</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">Akzeptanzrate</div>
+            <div class="stat-val grad-text">${s.accept_rate_pct}%</div>
+            <div class="stat-sub">${s.offers_dismissed} abgelehnt</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">Cashback</div>
+            <div class="stat-val">€${s.cashback_issued_eur.toFixed(2)}</div>
+            <div class="stat-sub">ausgegeben</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-lbl">Umsatz</div>
+            <div class="stat-val">€${s.revenue_recovered_eur.toFixed(2)}</div>
+            <div class="stat-sub">zurückgewonnen</div>
+          </div>
+        </div>
+
+        <div class="insight">
+          <div class="insight-lbl">✨ KI-Analyse</div>
+          <div class="insight-txt">${insight}</div>
+        </div>
+
+        <div class="sec-title">Leitplanken</div>
+        <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:16px">
+          <div class="slider-grp">
+            <div class="slider-hdr">
+              <span>Maximaler Rabatt</span>
+              <span class="sv" id="sv-disc">${cfg.max_discount_pct}%</span>
+            </div>
+            <input type="range" id="sl-disc" min="5" max="40" step="5" value="${cfg.max_discount_pct}">
+          </div>
+          <div class="slider-grp">
+            <div class="slider-hdr">
+              <span>Flauten-Schwelle (Min.)</span>
+              <span class="sv" id="sv-gap">${cfg.min_quiet_gap_min}</span>
+            </div>
+            <input type="range" id="sl-gap" min="5" max="60" step="5" value="${cfg.min_quiet_gap_min}">
+          </div>
+          <button class="btn btn-primary" id="btn-save-cfg">Leitplanken speichern</button>
+          <div class="save-fb" id="save-fb"></div>
+        </div>
+
+        <div class="sec-title">Test-Push</div>
+        <button class="btn btn-secondary" id="btn-push" style="margin-bottom:8px">📣 Test-Benachrichtigung senden</button>
+        <div style="font-size:12px;color:var(--muted);text-align:center;min-height:18px" id="push-fb"></div>
+        <div style="height:16px"></div>
+      `;
+    }
+
+    function wireSliders(cfg) {
+      const slDisc = document.getElementById('sl-disc');
+      const slGap  = document.getElementById('sl-gap');
+      if (slDisc) slDisc.addEventListener('input', () => {
+        document.getElementById('sv-disc').textContent = slDisc.value + '%';
+      });
+      if (slGap) slGap.addEventListener('input', () => {
+        document.getElementById('sv-gap').textContent = slGap.value;
+      });
+
+      document.getElementById('btn-save-cfg')?.addEventListener('click', async () => {
+        const fb = document.getElementById('save-fb');
+        fb.textContent = 'Speichern…';
+        try {
+          await fetch(`/api/merchant/${DEMO_MID}/settings`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              max_discount_pct:  parseInt(document.getElementById('sl-disc').value),
+              min_quiet_gap_min: parseInt(document.getElementById('sl-gap').value),
+            }),
+          });
+          fb.textContent = '✓ Gespeichert! KI verwendet neue Leitplanken.';
+        } catch { fb.textContent = 'Fehler beim Speichern.'; }
+      });
+
+      document.getElementById('btn-push')?.addEventListener('click', async () => {
+        const fb = document.getElementById('push-fb');
+        fb.textContent = 'Sende…';
+        try {
+          const d = await fetch('/api/push/send', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: 'LocalPulse 🍦', body: 'Flauten-Deal jetzt sichern!', url: '/' }),
+          }).then(r => r.json());
+          fb.textContent = d.sent > 0 ? `✓ ${d.sent} Push verschickt!` : 'Keine Subscriber gefunden.';
+        } catch { fb.textContent = 'VAPID nicht konfiguriert.'; }
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Boot
+    // ─────────────────────────────────────────────────────────────────────────
+    runContextChecks();
+  </script>
 </body>
 </html>

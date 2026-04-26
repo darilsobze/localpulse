@@ -1,0 +1,345 @@
+Frontend Beschreibung
+
+CITY WALLET — Detaillierte Frontend-Spezifikation
+Für deinen Freund, der den Backend und die 3D-Karte gebaut hat. Diese Spec geht davon aus, dass beide bereits existieren und das Frontend darauf aufsetzt. Sie ist so geschrieben, dass er sie direkt umsetzen oder an ein Code-Gen-Tool (Cursor, v0, Lovable, Claude Code) weitergeben kann.
+
+1. KONTEXT & ZIELSETZUNG
+Was wir bauen: Eine mobile-first Web-App namens CITY WALLET — ein KI-gestützter, kontextbewusster Stadtbegleiter, der hyperpersonalisierte lokale Angebote in Echtzeit anzeigt. Hackathon-Prototyp für die DSV-Gruppe Challenge.
+Was bereits existiert (von deinem Freund gebaut):
+
+Backend mit Mock-API-Endpoints für Kontext-Signale, Angebote, User-Daten
+Eine 3D-Karte von Darmstadt (Style: axonometrisch / isometrisch, vermutlich Three.js, Spline oder Mapbox 3D)
+
+Was das Frontend leisten muss: Die 3D-Karte und die Backend-Daten in ein emotional aufgeladenes, atmosphärisches UI einbetten, das in einem 90-Sekunden Demo-Video überzeugt.
+Demo-Szenario (alle Mock-Daten müssen darauf abgestimmt sein):
+
+User: Amine, 28
+Stadt: Darmstadt
+Tag: Sonntag (morgen)
+Zeit im Demo: 13:47
+Wetter: 31°C, sonnig, hoch UV
+Standort: Luisenplatz
+Hero-Merchant: BACK FACTORY, Luisenplatz
+Hero-Angebot: Kalte Apfelschorle + frische Brezel — €3,50 statt €5,20
+
+
+2. TECH-STACK (Empfehlung)
+
+Framework: Next.js 14+ (App Router) oder Vite + React 18
+Styling: Tailwind CSS + shadcn/ui als Basis, stark customized
+Animation: Framer Motion (Pflicht — die App lebt von Motion)
+State: Zustand oder React Context (kein Redux nötig)
+3D-Karten-Integration: Je nachdem was dein Freund gebaut hat — als React-Komponente einbinden, ggf. via iframe oder direkter Three.js Mount
+Fonts: Geist + Geist Mono (sans/mono) und Instrument Serif (display) — alle via next/font oder Google Fonts
+Icons: Lucide React
+Viewport-Target: 390px breit (iPhone 14/15), aber responsive bis Desktop für die Demo-Aufnahme
+
+
+3. ÄSTHETISCHE RICHTUNG — "AMBIENT OS"
+Das ist die wichtigste Sektion. Wenn dein Freund nur eine Sektion liest, dann diese.
+Grundgedanke: Die App soll sich anfühlen wie die Stadt atmet um den User herum. Nicht wie eine Fintech-App. Nicht wie eine Coupon-App. Mehr wie eine Wetter-App, die zufällig Angebote zeigt.
+Referenzen: Apple Weather (Redesign 2023+), Mercury Weather, Raycast, Things 3, Arc Browser. Nicht Stripe, Revolut, Lidl Plus, Payback.
+Hintergrund als Stimmung
+Der gesamte App-Hintergrund ist ein Full-Bleed Gradient, der das aktuelle Wetter und die Tageszeit darstellt. Für unser Demo-Szenario (heißer Sonntagnachmittag):
+
+Gradient-Stops von oben nach unten:
+
+#FFE8D1 (warmes goldenes Pfirsich)
+#F9C9A8 (apricot midtone)
+#E8B5C4 (dusty rose)
+#C9A6BD (rose-lavender)
+
+
+Subtiles volumetrisches Sonnenlicht in der oberen rechten Ecke (radialer Gradient von #FFFAEB mit 40% Opazität, blur 80px), driftet langsam
+Hitzeflimmern-Partikel: kleine helle Punkte (4-8px), 1-3% Opazität, langsam aufwärts treibend (CSS-Animation, 20-30s Dauer pro Partikel)
+Der Gradient atmet: 12-Sekunden-Loop, Sättigung shiftet um 3-5%
+Optional: 1-2% film grain Overlay für Textur
+
+Farbpalette
+VerwendungFarbeHexPrimärtextwarmes Schwarz#1A1410Sekundärtextwarmes Braun, 70%#5C4A3FTertiärtextgedämpft#8A7268Card SurfaceGlasrgba(255, 255, 255, 0.08) mit backdrop-blur-2xlCard BorderHairlinergba(255, 255, 255, 0.18)Primärakzent (sparsam!)warmes Amber#E8893BBestätigung (einmalig)dusty green#7BA87A
+Verbotene Farben: Reines Weiß, reines Schwarz, gesättigtes Blau, gesättigtes Rot, Neon-Töne. Wenn etwas blau ist, ist es falsch.
+Typografie
+
+UI-Body: Geist Sans, 14-15px, line-height 1.5
+UI-Mono / Daten / Timestamps: Geist Mono, 11-13px, letter-spacing 0.02em
+Display / emotionale Headlines: Instrument Serif, 28-44px, line-height 1.1, weight 400
+Hierarchie-Regel: Mono = System spricht. Sans = App spricht. Serif = App fühlt.
+
+Layout-Philosophie
+
+Single column, mobile-first
+Großzügige vertikale Abstände (24-48px zwischen Sektionen)
+Cards sind Andeutungen von Containern, keine Boxen — sehr niedriger Kontrast
+Bottom-Navigation als floating glass pill, nicht als Bar
+Die 3D-Karte ist ambient backdrop, nicht der Held — sie darf nicht mit dem Angebots-Card konkurrieren
+
+Motion-Prinzipien
+
+Default Easing: cubic-bezier(0.32, 0.72, 0, 1)
+Default Duration: 400-800ms
+Bewegungssprache: Dinge blühen auf und setzen sich — sie sliden oder poppen nicht
+Standard-Entry: scale 0.94 → 1.0, opacity 0 → 1, y-translate 8px → 0
+Idle Motion überall:
+
+Gradient atmet (12s loop)
+Sonnen-Glare driftet (40s loop)
+Moment Card Pulse am warmen Rand (4s loop)
+User-Dot auf Karte: context aura pulse (2s loop)
+
+
+Wenn etwas schnell wirkt, ist es kaputt. Maximale Geschwindigkeit ist sanft.
+
+
+4. KOMPONENTEN-ARCHITEKTUR
+Diese Komponenten bauen, jeweils mit shadcn/ui als Basis wo möglich:
+Atomare Komponenten
+<GlassCard />
+Wrapper für alle Cards. Props: variant (subtle | elevated | hero), className. Implementiert: backdrop-blur, hairline border, soft ambient shadow, 1% noise overlay. Alle anderen Cards extenden diese.
+<ContextChip />
+Kleiner Mono-Chip mit Icon links und Label rechts. Verwendet im ContextStrip und Why-Reveal. Höhe 24px, padding 6px 10px, rounded-full, border hairline.
+<AmberButton />
+Primärer CTA. Solid Amber #E8893B, weißer Text, rounded-full, padding 16px 24px. Hover: scale 1.02, brightness 1.05. Tap: scale 0.98. Soft glow shadow 0 8px 24px rgba(232, 137, 59, 0.3).
+<GhostButton />
+Sekundärer CTA. Transparent, warmer Sekundärtext, kein Border. Hover: 5% white background.
+<SerifHeadline />
+Display-Komponente für emotionale Momente. Instrument Serif, props: size (sm 28px | md 36px | lg 44px).
+Composite Komponenten
+<ContextStrip /> (top of home screen)
+Horizontale Strip ganz oben. Mono-Schrift, sehr klein (11px). Inhalt:
+Darmstadt · 13:47 · 31° ☀ · Sonntag · 3.2 km/h
+Trennzeichen: · mit reduzierter Opazität. Live-feel: Zeit tickt jede Sekunde, Walking-Pace fluctuiert ±0.2 km/h alle 5 Sekunden.
+<MomentCard /> (der Hero — Highest Polish)
+Glass Card, etwa 320px hoch. Layout:
+
+Top edge: sehr feine amber Akzentlinie + minimaler heat-shimmer
+Top right: kleiner Wetter-Chip 31° ☀
+Left: 8px breiter amber Akzentstreifen, vertikal
+Hero illustration: zentriert oben, ~100px hoch — Brezel + frostiges Glas mit Apfelschorle, Style: warm, weich, leicht "AI-generated" Feel (siehe Sektion 7 für Asset-Strategie)
+Headline (Serif): "Kalte Apfelschorle wartet."
+Subtitle (Sans): "Back Factory · Luisenplatz · 2 Min zu Fuß"
+Price row: €5,20 durchgestrichen, gedimmt → €3,50 in Amber, größer
+<WhyChip /> unten links
+Pulse-Animation: 4s Loop, weicher amber Glow am Rand atmet
+
+<WhyChip />
+Kleiner Pill-Chip: "Warum sehe ich das?" + kleiner ⓘ Icon. Tap öffnet <WhyReveal />.
+<WhyReveal /> (Wow Moment 2 — Highest Polish)
+Bottom Sheet (shadcn <Sheet /> Variante bottom). Höhe: ~70vh. Inhalt:
+
+Header: Serif "Warum das, warum jetzt."
+Liste mit 5 Signal-Zeilen, gestaggered animiert (jeweils +80ms delay):
+
+IconMono-LabelSans-Wert☀31°C, sonnigIndex für Kaltgetränke hoch📍80m von Back FactoryLuisenplatz📉Quiet hour erkannt32% unter typischem Sonntag 13 Uhr🥨Match zu deinem Musterdu magst kalte Drinks an heißen Tagen🔒Auf deinem Gerät verarbeitetnur ein anonymes Intent-Signal wurde gesendet
+Letzte Zeile: das 🔒 Icon pulsiert dezent grün (dusty #7BA87A). Ganz unten: kleiner Link "Was bleibt auf meinem Handy?"
+<AmbientMap /> (Integration der 3D-Karte deines Freundes)
+Container der die 3D-Karte einbettet. Wichtig:
+
+Overlay-Layer für unsere Akzente: User-Dot mit context aura, Back Factory Bloom, Ghost-Pulses
+Falls die 3D-Karte als iframe kommt: positioned absolute, eigenes Pointer-Events Management
+Falls native Three.js: shared canvas, wir mounten unsere Marker in dieselbe Szene
+Color-grading layer obendrüber: ein leichter warmer multiply-blend layer (mix-blend-mode: multiply, #FFE8D1 mit 15% Opazität), damit die Karte tonal zur App passt
+Interaktion: Tap auf Back Factory Bloom → expand MomentCard
+
+<MapPulse /> (Overlay-Marker)
+Drei Varianten:
+
+user: amber dot 12px, mit 60px context aura, 2s pulse
+active-offer: amber bloom über Merchant, größer, 3s pulse, leichte Glow
+ghost: gedämpft, anonymous pulse mit kleinem Timestamp-Label "vor 4 Min", langsam fadet
+
+<CheckoutSheet /> (Wow Moment 3 — Highest Polish)
+Mehrstufige Animation, full-screen sheet:
+
+Stage 1 (0-1.2s): Card flippt, morpht in QR Code
+Stage 2 (1.2-5s): QR Code in Glasrahmen, Offer-Summary darunter, "Zum Scannen vorzeigen" Hint, dezenter "Simulate Scan" Button für Demo
+Stage 3 (5-6.5s): Green check blüht (dusty green, scale 0 → 1.2 → 1.0), QR löst sich in Partikel auf
+Stage 4 (6.5-8s): Partikel driften nach oben, formen sich zu einem Stempel in der Ecke
+Stage 5 (8-10s): Confirmation message in Serif: "Genieß es. Back Factory hat eine ruhige Stunde gefüllt."
+Stage 6: Auto-return zu Home nach 12s total
+
+<MerchantStamp />
+Kreisförmiger Stempel, ~80px Durchmesser. Print-Feel: leicht raue Textur, gedämpfte Farbe pro Merchant, Datum unten klein in Mono. Props: merchant, date, state (collected | new | locked). State new glüht in Amber, scale 1.05 mit pulse.
+<JournalEntry />
+Horizontale Card im Journal. Layout: Datum links (Mono), Wetter-Emoji, Merchant-Name (Sans), gekauft (klein gedimmt), gespart (Amber, Mono). Sehr ruhig, listenartig.
+<RuleEditor /> (Merchant-Seite)
+Sieht aus wie ein ausgefülltes Formular, nicht editierbar im Demo. Drei Felder als Glass Cards:
+
+Ziel: Quiet Hours füllen
+Max. Rabatt: 30%
+Inventar-Priorität: Kaltgetränke, Brezeln
+
+Unten ein kleiner Hinweis in Mono: KI übernimmt den Rest.
+<TransactionDensityChart /> (Merchant-Seite)
+Line chart über den Tag (8:00-22:00). Die Zeit zwischen 13:00-14:00 ist visuell hervorgehoben — eine sanfte amber Highlight-Box mit Annotation "Quiet hour detected — KI aktiviert." Library: Recharts oder ein simples SVG. Style: keine Achsen-Boxen, dünne Linien, warmer Akzent für die aktuelle Stunde.
+<FloatingNav />
+Bottom-Nav als floating glass pill, ~16px vom unteren Rand. 4 Icons: Map, Passport, Journal, Settings. Aktiver State: amber Dot unter dem Icon, Icon selbst etwas kräftiger. Nicht-aktiv: niedriger Kontrast.
+
+5. ROUTES & SCREENS
+App Router struktur (Next.js):
+app/
+  layout.tsx              # Gradient background, fonts, font grain
+  page.tsx                # Home (Living Map)
+  moment/page.tsx         # Expanded Moment Card
+  checkout/page.tsx       # Checkout flow
+  passport/page.tsx       # City Passport
+  journal/page.tsx        # Moment Journal
+  settings/page.tsx       # Settings
+  merchant/page.tsx       # Merchant Dashboard
+  preview/
+    lockscreen/page.tsx   # iPhone lockscreen mockup für Video
+  onboarding/
+    page.tsx              # 3-step intro
+Detail-Specs pro Screen
+/ — Home (Living Map)
+
+Top: <ContextStrip />
+Mid (~55vh): <AmbientMap /> mit Overlays
+Bottom: <MomentCard /> mit Label darüber: "Ein Moment für dich · vor wenigen Sekunden"
+Bottom edge: <FloatingNav />
+Wichtig: MomentCard ist initial nicht da — blooming nach 600ms beim Mount
+
+/moment — Expanded Card
+Full-screen takeover des MomentCard. Layout vertikal: hero illustration → Serif headline → subtitle → price → why chip → "Diesen Moment einlösen" (Amber CTA) → "Jetzt nicht" (Ghost). Back-Button oben links.
+/checkout — Redemption Flow
+Vollbild dunkler glass overlay. Die mehrstufige Animation aus <CheckoutSheet />. Nach 12s Redirect zu /passport?new=back-factory.
+/passport
+Grid 3xN von <MerchantStamp />. 4 collected:
+
+"Hoppe Kaffee" — Mo, 21.04
+"Buchladen Mathilde" — Mi, 23.04
+"Eisdiele Bella" — Do, 24.04
+"Plattenladen Ost" — Sa, 25.04
+
+5te Position: Back Factory, state new, glüht.
+Unter Grid: Progress chip "5 von 12 zu Darmstadt Local" mit amber Progress Bar.
+/journal
+Vertikale Liste von <JournalEntry />. Heute (Back Factory) oben falls completed. Darunter die 4 vorherigen. Ganz unten: Teaser-Card "Deine Woche in Darmstadt — heute Abend verfügbar." mit weichem Pulse.
+/settings
+Minimale Liste. Toggle "Als Merchant ansehen" → leitet zu /merchant. Toggles für Notifications, Sprache (de/en), Privacy-Link.
+/merchant — Back Factory Dashboard
+Header: "Back Factory · Luisenplatz" in Serif.
+Drei Sektionen als Glass Cards:
+
+"Heute auf einen Blick"
+
+<TransactionDensityChart />
+Annotation der Quiet Hour
+Mono-Stat-Reihe: 47 Transaktionen · €312 Umsatz · 1 KI-Angebot aktiv
+
+
+"Live-Angebote (KI-generiert)"
+
+Card mit dem aktuellen Apfelschorle-Brezel Angebot
+Status: Aktiv · 47 Views · 3 angenommen · 0 abgelehnt (Counter ticken in Demo)
+Darunter <RuleEditor /> (read-only Anzeige der Regeln)
+
+
+"Diese Woche"
+
+4 Stat-Tiles: 14 Angebote · 9 angenommen · 64% Quote · €127 Mehrumsatz
+Sentence in Serif: "Du hast 7 ruhige Stunden gefüllt."
+
+
+
+/preview/lockscreen
+iPhone Lockscreen mockup. Wallpaper: ein abstraktes warmes Bild von Darmstadt. Uhrzeit groß: 13:46. Notification:
+
+CITY WALLET · jetzt
+Zwei Minuten von einer kalten Apfelschorle.
+Back Factory hat gerade eine ruhige Stunde. €3,50 statt €5,20.
+
+Darunter (für Video-Use, optional sichtbar): "Suppressed um 11:20 — User bewegt sich 12 km/h, vermutlich Fahrrad."
+/onboarding
+3 Screens, Swipe-Navigation:
+
+Serif Headline: "Deine Stadt, die aufpasst."
+"Wir sehen die Stadt, nicht deine Daten. Deine Muster bleiben auf deinem Handy." + Shield-Aura Illustration
+"Bereit, Amine?" + großer Amber-Button "Beginnen"
+
+
+6. INTEGRATION MIT BACKEND & 3D-KARTE
+Backend-Integration
+Wahrscheinlich existieren Endpoints wie:
+
+GET /api/context → aktuelles Wetter, Zeit, Location
+GET /api/offers/current → aktives Angebot für User
+POST /api/offers/:id/accept → Akzeptanz
+GET /api/merchant/:id/dashboard → Dashboard-Daten
+GET /api/user/passport → Stempel
+GET /api/user/journal → Past Moments
+
+Frontend-Strategie:
+
+Zentrale lib/api.ts mit typed fetchers
+React Query (TanStack Query) für Caching und Loading-States
+Loading-States: niemals Spinner — stattdessen die Cards bloomen einfach später ein. Skeleton-States in extrem dezentem Glas-Look.
+Error-States: warmer, ruhiger Ton — "Die Stadt holt kurz Luft." mit Retry-Button. Niemals rote Error-Banner.
+
+Falls dein Freund noch keine Endpoints definiert hat: arbeitet zuerst ein API-Contract in einem api-contract.md aus, bevor das Frontend implementiert wird.
+3D-Karten-Integration
+Drei mögliche Szenarien — abhängig davon, was dein Freund gebaut hat:
+Szenario A: Three.js / React Three Fiber Komponente
+
+Direkt als React-Komponente importieren in <AmbientMap />
+Frontend mountet eigene Marker (User-Dot, Bloom, Ghost-Pulses) in dieselbe Three.js Scene via shared ref
+Color-grading via Post-Processing Layer in der Scene oder via CSS overlay
+
+Szenario B: Spline-Export oder iframe
+
+Als iframe in <AmbientMap /> einbetten
+Marker als HTML overlay absolute positioniert über dem iframe
+Position-Mapping: vom 3D-Map auf 2D-Coords via simple lookup table für die ~10 Merchant-Locations
+Color-grading via overlay div mit mix-blend-mode: multiply
+
+Szenario C: Mapbox GL mit 3D-Buildings
+
+Mapbox-Komponente direkt mit mapbox-gl oder react-map-gl
+Eigene Sources & Layers für Marker
+Custom style von Mapbox Studio bauen, der zur warmen Palette passt — das ist wichtig, der Default-Style wird die Ästhetik zerstören
+
+Empfehlung an deinen Freund: wenn die Karte bereits in einem dieser Formate existiert, lieber an die App-Ästhetik anpassen als andersrum. Der Color-Grade-Overlay ist ein guter Notnagel falls die Karte tonal nicht passt.
+Marker-Daten (für die Karte)
+Mock-Liste für ghostPulses und Merchants:
+tsconst merchantsOnMap = [
+  { id: 'back-factory', lat: 49.8728, lng: 8.6512, status: 'active-offer' },
+  { id: 'hoppe-kaffee', lat: 49.8731, lng: 8.6498, status: 'idle' },
+  // ... 6-8 weitere
+];
+
+const ghostPulses = [
+  { lat: 49.8725, lng: 8.6505, minutesAgo: 4 },
+  { lat: 49.8740, lng: 8.6520, minutesAgo: 7 },
+  { lat: 49.8718, lng: 8.6489, minutesAgo: 12 },
+  { lat: 49.8735, lng: 8.6500, minutesAgo: 2 },
+];
+
+const userLocation = { lat: 49.8728, lng: 8.6500, heading: 45 };
+Koordinaten ungefähr Luisenplatz Darmstadt — bitte verifizieren mit dem 3D-Map-System.
+
+7. ASSETS & ILLUSTRATIONEN
+Hero-Illustration im MomentCard (Brezel + Apfelschorle):
+
+Empfehlung: Mit Midjourney oder DALL-E generieren mit Prompt wie: "warm minimalist illustration of a frosted glass of cold apple juice and a fresh german pretzel, soft peach and amber palette, ambient lighting, no background, slightly painterly, editorial style"
+Alternativ: Auf Iconfinder / Lottiefiles nach minimalistischen Illustrationen suchen, dann tonal anpassen
+Wichtig: Das Bild muss "AI-generated" wirken — nicht nach Stockfoto. Es ist Teil der Wow-Story, dass das Angebot dynamisch erstellt wurde.
+
+Merchant-Stempel:
+
+Jeweils kreisförmig, leichter Print-Look (Subtle texture, slight color bleed)
+Eigenes Icon/Symbol pro Merchant (Brezel für Back Factory, Kaffeebohne für Hoppe, etc.)
+Generierung: SVG-Templates mit per-Merchant Variablen, oder einzeln in Figma designen
+
+Onboarding Shield-Aura:
+
+Simple SVG-Illustration: stilisiertes Phone mit weichem Glow-Aura drumherum
+Animiert: aura pulst sanft
+
+Lockscreen-Wallpaper:
+
+Abstraktes Foto/Render von Darmstadt in warmer Palette
+Kann mit Midjourney generiert werden
+
+Iconography:
+
+Lucide React für alle UI-Icons
+Wetter-Icons: lieber emoji (☀ 🌤 🌧) für tonale Konsistenz, statt Icon-Set
