@@ -7,6 +7,7 @@
 
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
+  <script src="config.js"></script>
 
   <style>
     * { box-sizing: border-box; }
@@ -462,7 +463,7 @@
     // ─────────────────────────────────────────────────────────────────────────
     // Helpers
     // ─────────────────────────────────────────────────────────────────────────
-    const MAPBOX_TOKEN    = 'DEIN_MAPBOX_TOKEN_HIER';
+    const MAPBOX_TOKEN    = typeof CONFIG !== 'undefined' ? CONFIG.MAPBOX_TOKEN : 'DEIN_MAPBOX_TOKEN_HIER';
     const FALLBACK_LNGLAT = [8.6512, 49.8728];
 
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -508,7 +509,10 @@
     // ─────────────────────────────────────────────────────────────────────────
     // WowEffect init
     // ─────────────────────────────────────────────────────────────────────────
-    let userLngLat = null;
+    let userLngLat  = null;
+    let backendOffer = null;
+    let weatherTemp  = 20;
+    let weatherCode  = 0;
 
     const wow = new WowEffect({
       container: 'map',
@@ -516,7 +520,7 @@
       startLngLat: FALLBACK_LNGLAT,
       onFlightComplete: async () => {
         const from = userLngLat || FALLBACK_LNGLAT;
-        const to   = buildTarget(from);
+        const to   = backendOffer?.targetLngLat ?? buildTarget(from);
         try {
           const { distance, duration } = await wow.showRoute({ from, to });
           const mins = Math.ceil(duration / 60);
@@ -577,15 +581,33 @@
         const url  = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weather_code`;
         const res  = await fetch(url);
         const data = await res.json();
-        const temp = Math.round(data.current.temperature_2m);
-        const { emoji, label } = weatherInfo(data.current.weather_code);
-        resolveRow('ctx-weather', `${temp}°C · ${emoji} ${label}`);
-        // Update offer title dynamically
-        if (temp >= 25) {
-          document.getElementById('offer-title').textContent = `${temp}°C – Abkühlung gefällig? 🍦`;
-        }
+        weatherTemp = Math.round(data.current.temperature_2m);
+        weatherCode = data.current.weather_code;
+        const { emoji, label } = weatherInfo(weatherCode);
+        resolveRow('ctx-weather', `${weatherTemp}°C · ${emoji} ${label}`);
       } catch {
         resolveRow('ctx-weather', 'Nicht verfügbar');
+      }
+    }
+
+    async function fetchOffer(lngLat) {
+      try {
+        const res = await fetch('/api/offer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_lng:     lngLat[0],
+            user_lat:     lngLat[1],
+            temperature:  weatherTemp,
+            weather_code: weatherCode,
+            radius_m:     50000
+          })
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return await res.json();
+      } catch (e) {
+        console.warn('[LocalPulse] Backend nicht erreichbar:', e);
+        return null;
       }
     }
 
@@ -598,21 +620,28 @@
     }
 
     async function runContextChecks() {
-      // Location blocks weather + distance; time is independent
-      const [lngLat] = await Promise.all([
-        checkLocation(),
-        checkTime(),
-      ]);
-
+      const [lngLat] = await Promise.all([checkLocation(), checkTime()]);
       userLngLat = lngLat;
       wow.updateUserLocation(lngLat);
 
-      await Promise.all([
-        checkWeather(lngLat),
-        checkDistance(lngLat),
-      ]);
+      // Wetter holen (setzt weatherTemp / weatherCode)
+      await Promise.all([checkWeather(lngLat), checkDistance(lngLat)]);
 
-      // Short pause so user can read the results, then reveal offer
+      // Backend mit echtem Wetter aufrufen
+      backendOffer = await fetchOffer(lngLat);
+
+      if (backendOffer?.status === 'success') {
+        document.getElementById('offer-title').textContent = backendOffer.offer.title;
+        document.getElementById('offer-desc').textContent  = backendOffer.offer.description;
+        const dist = backendOffer.distance_m;
+        const distText = dist >= 1000 ? (dist/1000).toFixed(1) + ' km' : dist + ' m';
+        document.querySelector('#ctx-distance .ctx-value').textContent = `~${distText} entfernt`;
+      } else {
+        document.getElementById('offer-title').textContent = 'Keine Angebote in der Nähe';
+        document.getElementById('offer-desc').textContent  = 'Gerade haben lokale Händler keine aktiven Deals für deinen Standort.';
+        document.getElementById('btn-accept').disabled = true;
+      }
+
       await sleep(1400);
       document.getElementById('context-card').classList.add('hide');
       await sleep(400);
@@ -627,15 +656,14 @@
     document.getElementById('btn-accept').addEventListener('click', () => {
       document.getElementById('gen-ui-widget').classList.remove('visible');
       document.getElementById('gen-ui-widget').classList.add('hide');
-      const from = userLngLat || FALLBACK_LNGLAT;
-      wow.trigger({
-        targetLngLat: buildTarget(from),
-        socialProofCoords: [
-          [from[0] + 0.0025, from[1] + 0.0013],
-          [from[0] + 0.0035, from[1] + 0.0022],
-          [from[0] + 0.0028, from[1] + 0.0008],
-        ],
-      });
+      const from   = userLngLat || FALLBACK_LNGLAT;
+      const target = backendOffer?.targetLngLat ?? buildTarget(from);
+      const social = backendOffer?.social_proof_coords ?? [
+        [from[0] + 0.0025, from[1] + 0.0013],
+        [from[0] + 0.0035, from[1] + 0.0022],
+        [from[0] + 0.0028, from[1] + 0.0008],
+      ];
+      wow.trigger({ targetLngLat: target, socialProofCoords: social });
     });
 
     document.getElementById('btn-reset').addEventListener('click', () => {
