@@ -55,7 +55,7 @@ The core insight: a `25% off ice cream` offer means nothing to someone sprinting
 
 ## Architecture
 
-LocalPulse is built around three backend modules plus an on-device behavioral engine:
+LocalPulse is built around three backend modules + an on-device behavioral engine:
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
